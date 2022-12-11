@@ -1,0 +1,7 @@
+The answer is 225
+Calculation failed. Not enough numbers in stack when operation requested.
+The answer is 6
+Calculation failed. Not enough numbers in stack when operation requested.
+Calculation failed. There are extra numbers in the stack.
+The answer is 1
+Calculation failed. There are extra numbers in the stack.

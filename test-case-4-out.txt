@@ -1,0 +1,3 @@
+Calculation failed. There are extra numbers in the stack.
+Calculation failed. Not enough numbers in stack when operation requested.
+Calculation failed. Not enough numbers in stack when operation requested.

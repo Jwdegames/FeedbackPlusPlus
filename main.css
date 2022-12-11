@@ -1,0 +1,373 @@
+* {
+    padding:0;
+    margin:0;
+  }
+  
+  html, body {
+    height:100%;
+    
+    display:flex;
+    flex-direction:column;
+  }
+  
+  body {
+      margin: 0;
+      font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
+      font-size: 1rem;
+      font-weight: 400;
+      line-height: 1.5;
+      /*color: #ffffff;*/
+      text-align: left;
+      background-color: #ffffff !important;
+  }
+  
+  @font-face {
+    font-family: 'Bebas';
+    font-style: normal;
+    font-weight: normal;
+    src: url("/fonts/BebasNeue-Regular.woff2") format("woff2");
+  
+  }
+  
+  #login-form {
+      left: calc(50% - 150px);
+      top: calc(50% - 185px);
+  }
+  .display-3 {
+      font-family: 'Bebas';
+      text-shadow: 2px 2px 10px #141414;
+  }
+  
+  .display-4 {
+    font-family: 'Bebas';
+  
+      color: #bec9f8;
+  }
+  
+  .display-5 {
+    font-family: 'Helvetica Neue';
+      font-size: 2rem;
+  }
+  
+  .footer {
+    width: 100%;
+  }
+  /* Nav Bar Begins Here*/
+  nav {
+    background-color: maroon;
+  }
+  
+  nav .navbar-nav li a{
+    color: white;
+  }
+  
+  /* nav .navbar-nav .dropdown-menu a{
+    color: black;
+  } */
+  
+  nav .navbar-header a{
+    color: white !important;
+  }
+  
+  .dropdown:hover .dropdown-menu {
+    display: block;
+  }
+  
+  .dropdown-menu:hover {
+    display: block;
+  }
+  
+  .dropdown {
+    margin-top: auto;
+    margin-bottom: auto;
+  }
+  
+  /* .dropdown:hover {
+    background-color: black;
+  } */
+  
+  .dropdown-menu {
+    background-color: red;
+    margin-top: -1px;
+  }
+  
+  /* Nav Bar Ends Here*/
+  
+  h2 {
+    font-size: 32px;
+    text-align: center;
+  }
+  
+  h3 {
+    font-size: 28px;
+    text-align: center;
+  }
+  
+  h4 {
+    font-size: 24px;
+    text-align: center;
+  }
+  
+  h5 {
+    font-size: 20px;
+    text-align: center;
+  }
+  
+  h6 {
+    font-size: 16px;
+    text-align: center;
+  }
+  
+  p {
+    font-size: 18px;
+  }
+  
+  #content {
+    margin-left: 75px;
+    margin-right: 75px;
+  }
+  
+  #content-background {
+    background: linear-gradient(145deg, lightblue, lightpink, salmon, lightblue);
+    background-size: 250% 250%, 100% 100%;
+    margin-top: -50px;
+    padding-top: 100px;
+    flex-grow: 1;
+  }
+  
+  /*
+  Technical Portfolio Bubble START
+  */
+  
+  
+  .tpb-tag {
+    border-style: solid;
+    border-width: 2px 2px;
+    border-color: red;
+    border-radius: 20px;
+    
+    text-align: center;
+    background-color: maroon;
+    color: white;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    margin-left: auto;
+    margin-right: auto;
+    width: 200px;
+  }
+  
+  .center-h {
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  .tbp-left {
+    padding-left: 100px;
+    width: 600px;
+  }
+  
+  .tbp-right {
+    padding-right: 100px;
+  }
+  
+  .tbp-table {
+    border-spacing: 100px 0;
+    border-collapse: separate;
+  
+    /* border-style: solid;
+    border-width: 2px 2px;
+    border-color: red;
+    border-radius: 20px; */
+    margin-left: -90px;
+    margin-right: -90px;
+  }
+  
+  .tp-bubble {
+    border-style: solid;
+    border-width: 2px 2px;
+    border-color: red;
+    border-radius: 20px;
+  
+    background-color: lightgrey;
+    background: linear-gradient(45deg, salmon, lightgrey, red, blue);
+    background-size: 250% 250%, 100% 100%;
+  }
+  
+  .tbp-desc {
+    border-style: solid;
+    border-width: 2px 2px;
+    border-color: red;
+    border-radius: 20px;
+  
+    background-color: maroon;
+    color: white;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+  
+  .tbp-image {
+    width: 500px;
+    height: 400px;
+  }
+  
+  .tbp-wrap {
+    word-wrap: break-word;
+  }
+  
+  /*
+  Technical Portfolio Bubble END
+  */
+  
+  .right {
+    text-align: right;
+  }
+  
+  .center {
+    text-align: center;
+  }
+  
+  #canvas_container {
+    /* width: 800px;
+    height: 450px; */
+    overflow: auto;
+  }
+  
+  .valiantGC {
+    width: 957px !important;
+    height: 518px !important;
+    margin-top: 100px !important;
+  }
+
+  #submission-contents  {
+    overflow-y: scroll;
+    overflow-x: visible;
+    background-color: black;
+    height: 650px;
+    width: 568px;
+  }
+
+  .file-line {
+    font-size: 11px;
+    text-indent: -40px; 
+    padding-left: 40px;
+    color: white;
+    line-height: 0.8;
+  }
+
+  .file-line-index {
+    font-weight: bold;
+    color: cyan;
+  }
+
+  #tc-table-area {
+    height: 300px;
+    overflow-y: auto;
+  }
+
+  #tc-table-tbody {
+    display: block;
+    overflow: auto;
+    height: 300px;
+  }
+
+  .th-tc-num {
+    width: 25%;
+  }
+
+  .th-tc-pf {
+    width: 25%;
+  }
+
+  .th-tc-view {
+    width: 50%;
+  }
+
+  .td-tc-num {
+    width: 25%;
+  }
+
+  .td-tc-pf {
+    width: 25%;
+  }
+
+  .td-tc-view {
+    width: 50%;
+  }
+
+  #tc-out-area {
+    overflow-y: scroll;
+    overflow-x: visible;
+    background-color: black;
+  }
+
+  .tc-out-line {
+    color: white;
+    font-size: 12px;
+    line-height: 0.8;
+  }
+
+  #debug-contents {
+    overflow-y: scroll;
+    overflow-x: visible;
+    background-color: black;
+    width: 568px;
+    height: 300px;
+  }
+
+  .debug-line {
+    font-size: 11px;
+    text-indent: -40px; 
+    padding-left: 40px;
+    color: white;
+    line-height: 0.8;
+  }
+
+  .debug-line-index {
+    font-weight: bold;
+    color: cyan;
+  }
+
+  #debug-table-area {
+    height: 310px;
+    width: 568px;
+    overflow-y: auto;
+    word-break: break-word;
+  }
+
+  #debug-table-tbody{
+    display: block;
+    overflow: auto;
+    height: 345px;
+  }
+
+  .th-debug-name {
+    width: 20%;
+    font-size: 14px;
+  }
+
+  .th-debug-type {
+    width: 20%;
+    font-size: 14px;
+  }
+
+  .th-debug-value {
+    width: 60%;
+    font-size: 14px;
+  }
+
+  .td-debug-name {
+    width: 20%;
+    font-size: 12px;
+  }
+
+  .td-debug-type {
+    width: 20%;
+    font-size: 12px;
+  }
+
+  .td-debug-value {
+    width: 60%;
+    font-size: 12px;
+  }
