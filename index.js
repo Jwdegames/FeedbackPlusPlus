@@ -29,7 +29,7 @@ app.listen(process.env.PORT || 1234, () => {
 
 if (process.env.NODE_ENV !== "production") {
 	require("dotenv").config();
-  }
+}
 
 app.get(/^(.+)$/, function(req, res){ 
 	console.log('static file require: ' + req.params);
@@ -43,3 +43,6 @@ app.use("/Autograder", Autograder);
 
 const Debugger = require("./routes/Debugger.js");
 app.use("/Debugger", Debugger);
+
+const Database = require("./routes/Database.js");
+app.use("/Database", Database);

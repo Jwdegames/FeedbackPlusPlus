@@ -5,61 +5,35 @@ class RPN_Calculator:
 
     def reset(self):
         '''Resets the fail flags and stack'''
-        self.stack = []
-        self.failPop = False
-        self.failSyntax = False
 
     def pop(self):
-        '''Returns false if size of stack less than 2. Otherwise returns a tuple containing the top two numbers on
+        '''Returns False if size of stack less than 2. Otherwise returns a tuple containing the top two numbers on
         the stack, where the leftmost number is the top number on the stack'''
-        if len(self.stack) < 2:
-            return False
-        return (self.stack.pop(), self.stack.pop())
+        return False
 
     def failCondition(self):
         '''Outputs a fail message if a fail flag was set. Otherwise outputs None.'''
-        if self.failPop == True:
-            return "Calculation failed. Not enough numbers in stack when operation requested."
-        elif self.failSyntax == True:
-            return "Calculation failed. There are extra numbers in the stack."
-        else:
-            return None
+        return None
 
     def calculate(self, inputString):
         '''Does RPN Calculation on a string'''
-        self.reset()
-        items = inputString.split(" ")
-        for item in items:
-            if item == "+" or item == "-" or item == "*" or item == "/" or item == "^" or item == "%":
-                popResult = self.pop()
-                if (popResult == False):
-                    self.failPop = True
-                    return -1
-                num1 = popResult[0]
-                num2 = popResult[1]
-                if item == "+":
-                    opResult = num1 + num2
-                elif item == "-":
-                    opResult = num1 - num2
-                elif item == "*":
-                    opResult = num1 * num2
-                elif item == "/":
-                    opResult = num1 // num2
-                elif item == "^":
-                    opResult = pow(num1, num2)
-                else:
-                    opResult = num1 % num2
-                self.stack.append(opResult)
-                # print(self.stack)
-            else:
-                self.stack.append(int(item))
-        if (len(self.stack) != 1):
-            self.failSyntax = True
-            return -1
-        return self.stack[0]
+        '''
+            // Reset the stack
+            // Loop through the string; string is composed of several items separated by spaces 
+                // If the current item is an operation (+, -, *, /, ^, or %) then 
+                    // Pop two numbers from the stack
+                    // If pop() returns False, then set failPop to true and return -1
+                    // Otherwise, perform the operation on the two numbers
+                    // Push the result of that operation to the top of the stack
+                // If the current item is a number, then push it onto the stack 
+            // Check if there is only 1 item left in the stack
+            // If so, return that item
+            // Otherwise, set failSyntax to true, and return -1
+        
+        '''
+        return -1
 
-
-# DO NOT MODIFY THE BELOW
+# DO NOT MODIFY THE CODE BELOW
 import sys
 if len(sys.argv) < 2:
     print("RPN Calculator")
@@ -78,11 +52,11 @@ if len(sys.argv) < 2:
     print("farvel!")
 else:
     usrStr = sys.argv[1]
-    # /print("usrStr:", usrStr)
     usrStrList = usrStr.split("\n")
     resultStr = ""
     rpnc = RPN_Calculator()
     for strItem in usrStrList:
+
         result = rpnc.calculate(strItem.strip())
         failStr = rpnc.failCondition()
         if failStr != None:

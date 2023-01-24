@@ -7,16 +7,21 @@ var tcCount;
 var tcDone = 0;
 var tcResults;
 var tcStatuses;
+var tcPassed;
 var uIN = "0";
+var userName;
 var currTCIdx; 
 var noDebug = false;
 var runningDebug = false;
 var runningTC = false;
 
+
 var highlightedLineNum = 0;
 var globalDebugLines = "";
 var gDLLen = 0;
 var totalJVD; 
+
+var signInEnabled = true;
 
 // Debug variables
 var cLineParts;
@@ -102,6 +107,27 @@ function checkCompletion() {
         }
         runningTC = false;
         tryEnableFileInput();
+        // Get the number of test cases passed
+        tcPassed = 0;
+        for (let i = 0; i < tcCount; i++) {
+            if (tcStatuses[i] == "PASS") {
+                tcPassed += 1;
+            }
+        }
+        console.log("Test cases passed: " + tcPassed + "/" + tcCount);
+        let ajaxurl = "/Database/updateTestResults";
+        $.post(ajaxurl,
+            {
+                test: "hi",
+                fileCode: textFromFileLoaded,
+                userID: uIN,
+                username: userName,
+                testCasesPassed: tcPassed,
+            },
+            function(data, status) {
+                console.log("STATUS:" + status);
+                console.log(data);
+            });
     }
 
 }
@@ -716,4 +742,175 @@ function tryEnableFileInput() {
     if (!runningDebug && !runningTC) {
         document.getElementById("submissionFile").disabled = false;
     }
+}
+
+// #########################
+// Login / Logout Section
+function logout() {
+    console.log("Logging out");
+    /*var ajaxurl = "/Database/connect";
+    $.post(ajaxurl,
+        {},
+        function(data, status) {
+            console.log("STATUS:" + status);
+            console.log(data);
+        }
+
+    );*/
+    $("#autograder").css("display","none");
+    toggleSignInButtons();
+    
+}
+
+// Displays sign in form
+function signIn() {
+    console.log("Sign in!");
+    $("#main-content").css("display","none");
+    $("#login-form").css("display","");
+}
+
+// Displays regular content.
+function exitSignIn() {
+    console.log("Exit sign in!");
+    $("#main-content").css("display","");
+    $("#login-form").css("display","none");
+}
+
+// Signs the user up.
+function signUp() {
+    console.log("Registering!");
+    var ajaxurl = "/Database/register";
+    let user = $("#user-box").val();
+    let pass = $("#pass-box").val();
+    console.log("User is: " + user + " and pass is: " + pass);
+    $.post(ajaxurl,
+        {
+            test: "hi",
+            username: user,
+            password: pass,
+
+        },
+        function(data, status) {
+            console.log("STATUS:" + status);
+            console.log(data);
+            let dataLines = data.split("\n");
+            let flag = dataLines[0];
+            console.log(dataLines);
+            $("#invalid-user").css("display","none");
+            $("#invalid-pass").css("display","none");
+            if (flag == "Registration Result (Success!):") {
+                // Exit registration - we are all good to go!
+                $("#user-taken").css("display","none");
+                $("#autograder").css("display","");
+                uIN = dataLines[dataLines.length - 2];
+                userName = user;
+                // Remove invalid message from boxes
+                if ($("#user-box").hasClass("is-invalid")) {
+                    $("#user-box").removeClass("is-invalid");
+                }
+                if ($("#pass-box").hasClass("is-invalid")) {
+                    $("#pass-box").removeClass("is-invalid");
+                }
+                exitSignIn();
+                toggleSignInButtons();
+            } else {
+                console.log("Showing user taken");
+                $("#user-taken").css("display","");
+                // Display the invalid message
+                if (!$("#user-box").hasClass("is-invalid")) {
+                    $("#user-box").addClass("is-invalid");
+                }
+                // Remove invalid message from other box
+                if ($("#pass-box").hasClass("is-invalid")) {
+                    $("#pass-box").removeClass("is-invalid");
+                }
+                
+            }
+
+        }
+    );
+}
+
+// Logs the user in.
+function logIn() {
+    console.log("Registering!");
+    var ajaxurl = "/Database/login";
+    let user = $("#user-box").val();
+    let pass = $("#pass-box").val();
+    console.log("User is: " + user + " and pass is: " + pass);
+    $.post(ajaxurl,
+        {
+            test: "hi",
+            username: user,
+            password: pass,
+
+        },
+        function(data, status) {
+            console.log("STATUS:" + status);
+            console.log(data);
+            let dataLines = data.split("\n");
+            let flag = dataLines[0];
+            console.log(dataLines);
+            $("#user-taken").css("display","none");
+            if (flag == "Login Result (Success!):") {
+                // We are all good -> exit sign in
+                $("#invalid-user").css("display","none");
+                $("#invalid-pass").css("display","none");
+                $("#autograder").css("display","");
+                // Remove invalid message from boxes
+                if ($("#user-box").hasClass("is-invalid")) {
+                    $("#user-box").removeClass("is-invalid");
+                }
+                if ($("#pass-box").hasClass("is-invalid")) {
+                    $("#pass-box").removeClass("is-invalid");
+                }
+                // Assign the uIN
+                uIN = dataLines[dataLines.length - 2];
+                userName = user;
+                exitSignIn();
+                toggleSignInButtons();
+            } else {
+                if (data.includes("Invalid password")) {
+                    console.log("Showing invalid password");
+                    $("#invalid-user").css("display","none");
+                    $("#invalid-pass").css("display","");
+                    // Display the invalid message
+                    if (!$("#pass-box").hasClass("is-invalid")) {
+                        $("#pass-box").addClass("is-invalid");
+                    }
+                    // Remove invalid message from other box
+                    if ($("#user-box").hasClass("is-invalid")) {
+                        $("#user-box").removeClass("is-invalid");
+                    }
+                } else {
+                    console.log("Showing invalid username");
+                    $("#invalid-user").css("display","");
+                    $("#invalid-pass").css("display","none");
+                    // Display the invalid message
+                    if (!$("#user-box").hasClass("is-invalid")) {
+                        $("#user-box").addClass("is-invalid");
+                    }
+                    // Remove invalid message from other box
+                    if ($("#pass-box").hasClass("is-invalid")) {
+                        $("#pass-box").removeClass("is-invalid");
+                    }
+                }
+            }
+        }
+    );
+}
+
+// Toggles the login and sign out buttons
+function toggleSignInButtons() {
+    if (signInEnabled) {
+        console.log("Displaying logout");
+        $("#signup-section").css("display","none");
+        $("#logout-section").css("display","");
+
+    } else {
+        console.log("Displaying sign in");
+        $("#signup-section").css("display","");
+        $("#logout-section").css("display","none");
+    }
+    signInEnabled = !signInEnabled;
 }

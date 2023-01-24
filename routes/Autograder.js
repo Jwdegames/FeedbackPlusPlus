@@ -51,6 +51,7 @@ router.post('/sendGradeRequest', function(req, res)  {
             console.log(req.body == undefined || req.body === undefined);
             console.log("Req body:" + Object.keys(req.body));
             console.log("Req test:" + req.body.test);
+            console.log("Req userID:" + req.body.userID);
         }
         fs.writeFileSync('tmp/test-submission-'+req.body.userID+'.py', req.body.fileText);
         // file written successfully

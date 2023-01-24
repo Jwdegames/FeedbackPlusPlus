@@ -15,30 +15,75 @@
     <body>
         <div id = "content-background">
             <div id = "content">
-            <h1 style = "text-align:center;">Feedback++</h1>
-            <h2><u><b></b></u></h2>
-            <label class="form-label" for="customFile">Input Submission</label>
-            <input type="file" class="form-control" id="submissionFile" onchange="displayFileData(event)"/>
-            <div style ="width: 75%; display:table;">
-                <div style ="display: table-row;">
-                    <div id = "file-table" style="display:table-cell;"></div>
-                
-
-                    <div id = "user-table" style ="display:table-cell;">
-                        <button id = "run-tests" type = "button" class = "btn btn-primary" onclick="autograde()" style = "display:none">Run Test Cases</button>
-                        <div id ="tc-table"></div>
-                        <div id ="tc-output"></div>
-                    </div>
-                    
-                    <div id = "direct-message-table" style ="display:table-cell;">
-                        <button id = "run-debug" type = "button" class = "btn btn-primary" onclick="debug(1)" style = "display:none">Reset Debugger</button>
-                        <button id = "run-debug-NS" type = "button" class = "btn btn-primary" onclick="debugNS()" style = "display:none">Next Step</button>
-                        <button id = "run-debug-NL" type = "button" class = "btn btn-primary" onclick="debugNL()" style = "display:none">Next Line</button>
-                        <div id ="debug-output"></div>
-                        <div id ="debug-table"></div>
+                <div id = "login-content">
+                    <div class="row position-fixed" id="login-form" style="display:none;">
+                        <aside class="col-sm-4">
+                            <div class="card" id="login-card" style="width:300px;">
+                            <button type="submit" id = "login-exit" class="btn btn-danger btn-block" onclick="exitSignIn()">Exit Sign In</button>
+                            <article class="card-body">
+                            
+                            <h4 class="card-title mt-6 mb-6">Sign In</h4>
+                                <form  onsubmit="return false" action="" method="post">
+                                <div class="form-group">
+                                    <p class = "text-center">Username:</p>
+                                    <input name="username" class="form-control" id="user-box" placeholder="Username" type="text" value="">
+                                    <div class="invalid-feedback" id = "user-taken" style="display:none">Username already exists!</div>
+                                    <div class="invalid-feedback" id = "invalid-user" style="display:none">Incorrect Username!</div>
+                                </div>
+                                
+                                <!-- form-group// -->
+                                <div class="form-group">
+                                    <!-- <a class="float-right" href="#">Forgot?</a> -->
+                                    <p class = "text-center">Password:</p>
+                                    <input class="form-control" id="pass-box" placeholder="******" type="password">
+                                    <div class="invalid-feedback" id = "invalid-pass" style="display:none">Incorrect Password!</div>
+                                </div>
+                                
+                                <!-- form-group// --> 
+                                <div class="form-group"> 
+                                <div class="checkbox">
+                                <!-- <label> <input type="checkbox"> Save password </label>-->
+                                </div> <!-- checkbox .// -->
+                                </div> <!-- form-group// -->  
+                                <div class="form-group ">
+                                    <input type="submit" class="btn btn-primary btn-block" id="login-send" value="Login" onclick="logIn()">
+                                    <input type="submit" id = "register-send" class="btn btn-outline-primary btn-block" value="Sign up" onclick="signUp()">
+                                </div> <!-- form-group// -->                                                           
+                            </form>
+                            </article>
+                            </div>
+                        </aside>
                     </div>
                 </div>
-            </div>
+                <div id = "main-content">
+                    <button id = "signup-section" type = "button" class = "btn btn-primary" onclick="signIn()">Sign In</button>
+                    <button id = "logout-section" type = "button" class = "btn btn-primary" onclick="logout()" style="display:none">Logout</button>
+                    <h1 style = "text-align:center;">Feedback++</h1>
+                    <div id = "autograder" style="display: none">
+                        <label class="form-label" for="customFile">Input Submission</label>
+                        <input type="file" class="form-control" id="submissionFile" onchange="displayFileData(event)"/>
+                        <div style ="width: 75%; display:table;">
+                            <div style ="display: table-row;">
+                                <div id = "file-table" style="display:table-cell;"></div>
+                            
+
+                                <div id = "user-table" style ="display:table-cell;">
+                                    <button id = "run-tests" type = "button" class = "btn btn-primary" onclick="autograde()" style = "display:none">Run Test Cases</button>
+                                    <div id ="tc-table"></div>
+                                    <div id ="tc-output"></div>
+                                </div>
+                                
+                                <div id = "direct-message-table" style ="display:table-cell;">
+                                    <button id = "run-debug" type = "button" class = "btn btn-primary" onclick="debug(1)" style = "display:none">Reset Debugger</button>
+                                    <button id = "run-debug-NS" type = "button" class = "btn btn-primary" onclick="debugNS()" style = "display:none">Next Step</button>
+                                    <button id = "run-debug-NL" type = "button" class = "btn btn-primary" onclick="debugNL()" style = "display:none">Next Line</button>
+                                    <div id ="debug-output"></div>
+                                    <div id ="debug-table"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
         </div>
 
 
