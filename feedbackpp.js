@@ -11,9 +11,16 @@ var tcPassed;
 var uIN = "0";
 var userName;
 var currTCIdx; 
+var currTC;
 var noDebug = false;
 var runningDebug = false;
 var runningTC = false;
+var runningViz = false;
+var showingDebugger = false;
+var showingVisualizer = false;
+var vizPlayMode = false;
+var vizPlaySpeed = 1;
+var playIntervalID = undefined;
 
 
 var highlightedLineNum = 0;
@@ -32,6 +39,25 @@ var globalJVD;
 var localJVD;
 var fileEvent;
 
+
+/**
+ * Disables the file selector, run test cases button, logout button, and settings button
+ */
+function disableGeneralComponents() {
+    document.querySelector("#run-tests").disabled = true;
+    document.querySelector("#logout-section").disabled = true;
+    document.querySelector("#submissionFile").disabled = true;
+}
+
+/**
+ * Enables the file selector, run test cases button, logout button, and settings button
+ */
+function enableGeneralComponents() {
+
+    document.querySelector("#run-tests").disabled = false;
+    document.querySelector("#logout-section").disabled = false;
+    document.querySelector("#submissionFile").disabled = false;
+}
 
 function runTestCase(index) {
     let tcNumStr = (index + 1) + ""
@@ -71,9 +97,11 @@ function makeTestCaseTable() {
         } else {
             tcTable += "<td class = 'td-tc-pf' style = 'color:red'><b>"+tcStatuses[i]+"</b></td>"
         }
-        tcTable += "<td class = 'td-tc-view'><div class ='form-group'>";
-        tcTable += "<input type='submit' class='btn btn-primary btn-block' id='tc"+(i + 1)+"' value='View' onclick='makeTestCaseOutput("+(i)+")'>"
-        tcTable += "<input type='submit' class='btn btn-primary btn-block' id='tcd"+(i + 1)+"' value='Debug' onclick='debug("+(i + 1)+")'></div></td></tr>"
+        tcTable += "<td class = 'td-tc-view'><div class ='form-group'><div class = 'row no-gutters'>";
+        tcTable += "<div class = 'col-sm-6'><input type='submit' class='btn btn-primary btn-block' id='tc"+(i + 1)+"' value='View' onclick='makeTestCaseOutput("+(i)+")'></div>"
+        tcTable += "<div class = 'col-sm-6'><input type='submit' class='btn btn-primary btn-block' id='tcd"+(i + 1)+"' value='Debug' onclick='debug("+(i + 1)+")'></div>"
+        tcTable += "<div class = 'col-sm-12'><input type='submit' class='btn btn-primary btn-block' id='tcv"+(i + 1)+"' value='Visualize' onclick='visualize("+(i + 1)+")'></div>"
+        tcTable += "</td></tr>"
     }
     tcTable += "</tbody>"
     $("#tc-table").html(tcTable);
@@ -195,8 +223,39 @@ function enableDebugButtons() {
     }
 }
 
+/**
+ * Enables the debug buttons in the test case table.
+ */
+function enableTCDebugButtons() {
+    for (let i = 0; i < tcCount; i++) {
+        document.querySelector("#tcd" + (i + 1)).disabled = false;
+    }
+}
+
+/**
+ * Disables the debug buttons in the test case table.
+ */
+function disableTCDebugButtons() {
+    for (let i = 0; i < tcCount; i++) {
+        document.querySelector("#tcd" + (i + 1)).disabled = true;
+    }
+}
+
+/**
+ * Toggles the visibility of the debugger
+ */
+function toggleDebuggerVis() {
+    if (showingDebugger) {
+        $("#debugger").css("display","none");
+    } else {
+        $("#debugger").css("display","");
+    }
+    showingDebugger = !showingDebugger;
+}
+
 function debug(tcNumStr) {
     runningDebug = true;
+    currTC = tcNumStr;
     suspendDebug();
     disableDebugButtons();
     document.getElementById("submissionFile").disabled = true;
@@ -583,7 +642,7 @@ function processDebugInfo(data, tcNumStr) {
     debugTable += "<td class = 'th-debug-type'>Type</td><td class = 'th-debug-value'>Value</tr>";
     Object.keys(totalJVD).forEach(function(key, index) {
         // Don't do the excluded keys
-        excludedKeys = ["__builtins__", "var182764"]
+        excludedKeys = ["__builtins__", "__name__", "__file__", "var182764"]
         if (!(excludedKeys.includes(key))) {
             debugTable += "<tr><td class = 'td-debug-name'>"+key+"</td>";
             let cutKey = totalJVD[key].type.slice(1,-1);
@@ -611,6 +670,10 @@ function processDebugInfo(data, tcNumStr) {
             document.querySelector("#tcd" + (i + 1)).disabled = false;
         }
     } else {
+        // Enable the debugger
+        if (!showingDebugger) {
+            toggleDebuggerVis();
+        }
         enableDebugButtons();
     }
     runningDebug = false;
@@ -730,6 +793,11 @@ function displayFileData(event) {
             $("#file-table").html(fileTableDat);
             $("#run-tests").css("display","");
             console.log("Applied html");
+
+            // Disable everything but the run test cases command 
+            disableDebugButtons();
+            disableVizButtons();
+
         };
 
         fileReader.readAsText(fileToLoad, "UTF-8");
@@ -758,6 +826,9 @@ function logout() {
 
     );*/
     $("#autograder").css("display","none");
+    // Remove credentials
+    localStorage.removeItem("userName");
+    localStorage.removeItem("uIN");
     toggleSignInButtons();
     
 }
@@ -811,6 +882,7 @@ function signUp() {
                 if ($("#pass-box").hasClass("is-invalid")) {
                     $("#pass-box").removeClass("is-invalid");
                 }
+                storeCreds();
                 exitSignIn();
                 toggleSignInButtons();
             } else {
@@ -829,6 +901,15 @@ function signUp() {
 
         }
     );
+}
+
+/**
+ * Stores username and userid after successful login / registration
+ * Reduces the need for signing in again unless logout occurs 
+ */
+function storeCreds() {
+    localStorage.setItem('userName', userName);
+    localStorage.setItem('uIN', uIN);
 }
 
 // Logs the user in.
@@ -867,6 +948,7 @@ function logIn() {
                 // Assign the uIN
                 uIN = dataLines[dataLines.length - 2];
                 userName = user;
+                storeCreds();
                 exitSignIn();
                 toggleSignInButtons();
             } else {
@@ -913,4 +995,742 @@ function toggleSignInButtons() {
         $("#logout-section").css("display","none");
     }
     signInEnabled = !signInEnabled;
+}
+
+
+/**
+ * VISUALIZATION
+ * 
+ * 
+ * 
+ * 
+ * 
+ * VISUALIZATION
+ */
+
+
+function disableVizButtons() {
+    document.querySelector("#run-viz").disabled = true;
+    document.querySelector("#run-viz-forward").disabled = true;
+    document.querySelector("#run-viz-back").disabled = true;
+    document.querySelector("#run-viz-play").disabled = true;
+    for (let i = 0; i < tcCount; i++) {
+        document.querySelector("#tcv" + (i + 1)).disabled = true;
+    }
+}
+
+function enableVizButtons() {
+    document.querySelector("#run-viz").disabled = false;
+    document.querySelector("#run-viz-forward").disabled = false;
+    document.querySelector("#run-viz-back").disabled = false;
+    document.querySelector("#run-viz-play").disabled = false;
+    for (let i = 0; i < tcCount; i++) {
+        document.querySelector("#tcv" + (i + 1)).disabled = false;
+    }
+}
+
+/**
+ * Enables the debug buttons in the test case table.
+ */
+function enableTCVizButtons() {
+    for (let i = 0; i < tcCount; i++) {
+        document.querySelector("#tcv" + (i + 1)).disabled = false;
+    }
+}
+
+/**
+ * Disables the debug buttons in the test case table.
+ */
+function disableTCVizButtons() {
+    for (let i = 0; i < tcCount; i++) {
+        document.querySelector("#tcv" + (i + 1)).disabled = true;
+    }
+}
+
+function showVizButtons() {
+    $("#run-viz").css("display", "");
+    $("#run-viz-forward").css("display", "");
+    $("#run-viz-back").css("display", "");
+    $("#run-viz-play").css("display", "");
+}
+
+function hideVizButtons() {
+    $("#run-viz").css("display", "none");
+    $("#run-viz-forward").css("display", "none");
+    $("#run-viz-back").css("display", "none");
+    $("#run-viz-play").css("display", "none");
+}
+
+function toggleVisualizerVis() {
+    if (showingVisualizer) {
+        $("#visualizer").css("display","none");
+    } else {
+        $("#visualizer").css("display","");
+    }
+    showingVisualizer = !showingVisualizer;
+}
+
+/**
+ * Gets the input of a test case
+ */
+function getTCInput(tcNumStr) {
+    let tcParts = tcResults[tcNumStr - 1].split("\nEXPECTED");
+    let tcInput = tcParts[0].substring(7,);
+    return tcInput;
+}
+
+
+/*
+* Performs a visualization of the algorithm using P5.JS
+*/
+function visualize(tcNumStr) {
+    runningViz = true;
+    currTC = tcNumStr;
+    suspendDebug();
+    disableDebugButtons();
+    document.getElementById("submissionFile").disabled = true;
+    var ajaxurl = "/Visualizer/sendVisualizeRequest";
+    console.log("Sending visualizer post");
+    let tcInput = getTCInput(currTC);
+    // Strip all carriage returns
+    tcInput = tcInput.replace(/[\r]/g, '');
+    console.log(tcInput);
+    // let tcNumStr = (currTCIdx + 1) + "";
+    $.post(ajaxurl,
+        {
+            test: "hi",
+            fileText: textFromFileLoaded,
+            userID: uIN,
+            tcNum: tcNumStr,
+            tcInput: tcInput
+        },
+        function(data, status) {
+            console.log("STATUS:" + status);
+            console.log(data);
+            if (showingDebugger) {
+                toggleDebuggerVis();
+            }
+            if (!showingVisualizer) {
+                toggleVisualizerVis();
+            }
+            p5Obj.loadData(data);
+            p5Obj.parseData();
+            enableVizButtons();
+            showVizButtons();
+            visualizeReset();
+            enableTCDebugButtons();
+            
+        }
+    );
+}
+
+/**
+ * Holds information for a P5.JS Variable
+ */
+
+class P5Var {
+    constructor(name, data, x, y, text_size, text_align, text_color) {
+        this.name = name;
+        this.data = data;
+        this.x = parseInt(x, 10);
+        this.y = parseInt(y, 10);
+        this.text_size = parseInt(text_size, 10);
+        this.cmds = {};
+        this.drawCMDS = [];
+        this.drawCMDS.push(["textAlign", text_align]);
+        this.drawCMDS.push(["fill", text_color]);
+        this.drawCMDS.push(["textSize", this.text_size]);
+        this.drawCMDS.push(["text", this.displayStr(), this.x, this.y]);
+        this.cmds["drawCMDS"] = this.drawCMDS;
+    }
+
+    // Returns the string to print to the visualizer
+    displayStr() {
+        return this.name + ": " + this.data; 
+    }
+
+    // Update the value
+    updateVal(newData) {
+        this.data = newData;
+        this.drawCMDS[3] = ["text", this.displayStr(), this.x, this.y];
+    }
+
+    getDrawCMDS() {
+        return this.drawCMDS;
+    }
+
+    getCMDS() {
+        return this.cmds;
+    }
+}
+
+/**
+ * Holds information for a P5.JS Stack
+ */
+class P5Stack {
+    constructor(stackData, x, y, spacing, text_size) { 
+        this.stackData = stackData;
+        if (this.stackData == "") {
+            this.stackParts = [];
+        } else {
+            this.stackParts = stackData.split(" ");
+            }
+        this.x = parseInt(x, 10);
+        this.y = parseInt(y, 10);
+        this.spacing = parseInt(spacing, 10);
+        this.text_size = parseInt(text_size, 10);
+        this.resetVars();
+    }
+
+    resetVars() {
+        this.highlights = Array(this.stackParts.length).fill(false);
+        this.stackXPositions = [];
+        this.highlightPointer = 0;
+        this.drawCMDS = [];
+        this.bgCMDS = [];
+        this.cmds = {};
+        this.cmds["drawCMDS"] = this.drawCMDS;
+        this.cmds["bgCMDS"] = this.bgCMDS;
+    }
+
+    nextHighlight() {
+        this.highlights[this.highlightPointer] = true;
+        this.highlightPointer++;
+        return this.highlightPointer - 1;
+    }
+
+    /**
+     * Highlights the start index and all elements past the start index
+     */
+    highlightPost(start) {
+        for (let i = start; i < this.stackParts.length; i++) {
+            this.highlights[i] = true;
+        }
+    }
+
+    /**
+     * Removes all highlighted elements
+     */
+    popAllHighlight() {
+        let newStackParts = []
+        for (let i = 0; i < this.stackParts.length; i++) {
+            if (this.highlights[i] != true) {
+                newStackParts.push(this.stackParts[i]);
+            }
+        }
+        this.stackParts = newStackParts;
+        this.resetVars();
+
+    }
+
+    peek() {
+        return this.stackParts[this.stackParts.length];
+    }
+
+    reverse() {
+        this.stackParts.reverse();
+        return this.stackParts;
+    }
+
+    pop() {
+        return this.stackParts.pop();
+    }
+
+    push(elem) {
+        this.stackParts.push(elem);
+        return this.stackParts;
+    }
+
+    getStack() {
+        return this.stackParts;
+    }
+
+    getDrawCMDS() {
+        return this.drawCMDS;
+    }
+
+    getBGCMDS() {
+        return this.bgCMDS;
+    }
+
+    getCMDS() {
+        return this.cmds;
+    }
+}
+
+
+
+/**
+ * Resets the visualizer
+ */
+function visualizeReset() {
+    // Clear interval if it exists
+    if (playIntervalID != undefined) {
+        clearInterval(playIntervalID);
+        playIntervalID = undefined;
+    }
+    p5Obj.resetViz();
+    enableVizButtons();
+    enableTCDebugButtons();
+    document.querySelector("#run-viz-speed-chooser").disabled = false;
+    document.querySelector("#run-viz-back").disabled = true;
+    enableGeneralComponents();
+    
+}
+
+/**
+ * Performs the next step in the visualization process
+ */
+function visualizeNext() {
+    if (p5Obj.reachedEnd()) {
+        // Prevent the button from being used if we have no more steps
+        document.querySelector("#run-viz-forward").disabled = true;
+    } else {
+        p5Obj.processNextStep();
+    }
+    document.querySelector("#run-viz-back").disabled = false;
+}
+
+/**
+ * Goes back one step in the visualizer
+ */
+function visualizePrev() {
+    if (!p5Obj.started()) {
+        document.querySelector("#run-viz-back").disabled = true;
+    } else {
+        p5Obj.undoStep();
+    }
+    document.querySelector("#run-viz-forward").disabled = false;
+}
+
+/**
+ * Plays the visualizer at the specified speed.
+ */
+function visualizePlay() {
+    if (vizPlayMode == false) {
+        // Setup the buttons
+        console.log("Playing visualizer");
+        document.querySelector("#run-viz-forward").disabled = true;
+        document.querySelector("#run-viz-back").disabled = true;
+        disableTCDebugButtons();
+        disableTCVizButtons();
+        vizPlaySpeed = parseFloat($("#run-viz-speed-chooser option:selected").val());
+        document.querySelector("#run-viz-speed-chooser").disabled = true;
+        document.querySelector("#run-viz-play").innerHTML = "Stop";
+        disableGeneralComponents();
+
+        // Now actually run the visualizer
+        playIntervalID = setInterval(visualizePlayStep, Math.floor(1000 * 1/vizPlaySpeed));
+    } else {
+        console.log("Stopping visualizer");
+        enableTCDebugButtons();
+        enableTCVizButtons();
+        document.querySelector("#run-viz-speed-chooser").disabled = false;
+        document.querySelector("#run-viz-play").innerHTML = "Play";
+        if (p5Obj.started()) {
+            document.querySelector("#run-viz-back").disabled = false;
+        }
+        if (!p5Obj.reachedEnd()) {
+            document.querySelector("#run-viz-forward").disabled = false;
+        }
+        enableGeneralComponents();
+        clearInterval(playIntervalID);
+        playIntervalID = undefined;
+    }
+    vizPlayMode = !vizPlayMode;
+
+}
+
+/**
+ * Runs the next step of the visualizer automatically, and checks to make sure it can go to the next step
+ */
+function visualizePlayStep() {
+    if (!p5Obj.reachedEnd()) {
+        p5Obj.processNextStep();
+    } else {
+        visualizePlay();
+    }
+}
+
+let s = p => {
+    let x = 100;
+    let y = 100;
+    let xPad = 0;
+    let yPad = 50;
+    let pData = "";
+    let parsedData = "";
+    let step = 0;
+    let maxStep = 0;
+    let varDict = {};
+    let currVar = "";
+    let vizStates = [];
+    let bg_color = [0, 0, 0];
+    let txt_color = [255, 255, 255];
+    let stroke_color = [255, 255, 255];
+    let sub_color = [-255, -255, -255];
+    let blend_mode = p.BLEND;
+    let cmds = [];
+    let currPDescription;
+    let alert_color = [255, 0, 0];
+    let alert_mode = false;
+  
+    p.setup = function() {
+        console.log("Setting up canvas!");
+        let pCanvas = p.createCanvas(568, 650);
+
+        pCanvas.parent('viz-canvas-area');
+        p.resetViz();
+      // p.rect(x, y, 50, 50);
+      // p.test()
+    };
+
+    /**
+     * Resets the visualizer
+     */
+    p.resetViz = function() {
+        p.background(bg_color);
+        p.fill(txt_color);
+        p.textSize(18);
+        step = 0;
+        maxStep = 0;
+        vizStates = [];
+        cmds = [];
+        varDict = {};
+        vizStates.push(p.get());
+    }
+
+    /**
+     * Resets variables 
+     */
+    p.resetVars = function() {
+        varDict = {};
+        cmds = [];
+    }
+
+    p.test = function() {
+        p.background(p.random(255));
+    }
+
+    p.printVarData = function() {
+        console.log(varDict);
+    }
+    
+    p.started = function() {
+        return step > 0;
+    };
+
+    p.reachedEnd = function() {
+        return parsedData.vCMDList.length == step;
+    };
+
+    p.draw = function() {
+        p.noLoop();
+        if (!alert_mode) {
+            p.background(bg_color);
+        } else {
+            p.background(alert_color);
+        }
+        console.log("The commands are:");
+        console.log(cmds)
+        p.fill(txt_color);
+        p.text(currPDescription, 10, 25, 568, 100);
+        for (let idx = 0; idx < cmds.length; idx++) {
+            let drawObj = cmds[idx];
+            // console.log(drawObj);
+            let localCMDS = drawObj.getCMDS();
+            if (localCMDS.hasOwnProperty("bgCMDS")) {
+                // Do the backgrounds
+                let bgCMDS = localCMDS["bgCMDS"];
+                for (let i = 0; i < bgCMDS.length; i++) {
+                    let currCMD = bgCMDS[i];
+                    p[currCMD[0]](...currCMD.slice(1));
+                }
+            }
+            if (localCMDS.hasOwnProperty("drawCMDS")) {
+                // Do the drawing
+                let drawCMDS = localCMDS["drawCMDS"];
+                // console.log(drawCMDS);
+                for (let i = 0; i < drawCMDS.length; i++) {
+                    let currCMD = drawCMDS[i];
+                    // console.log(currCMD);
+                    p[currCMD[0]](...currCMD.slice(1));
+                }
+            }
+        }
+    };
+
+    p.eraseMode = function() {
+        p.fill(bg_color);
+        p.blendMode(p.BLEND);
+    }
+
+    p.loadData = function(data) {
+        pData = data;
+    };
+
+    p.parseData = function() {
+        parsedData = JSON.parse(pData);
+    };
+
+    // Draws a stack
+    p.drawStack = function(newStack) {
+        // Now need to display the stack
+        let stackParts = newStack.getStack();
+        let prevWidth = 0;
+        let xPos = newStack.x;
+        // p.textAlign(p.LEFT);
+        // p.fill(txt_color);
+        // p.textSize(newStack.text_size);
+        let drawCMDS = newStack.getDrawCMDS();
+        drawCMDS.push(["textAlign", p.LEFT]);
+        drawCMDS.push(["fill", txt_color]);
+        drawCMDS.push(["textSize", newStack.text_size]);
+        for (let i = 0; i < stackParts.length; i++) {
+            let stackPart = stackParts[i];
+            // console.log("Writing: " + stackPart);
+
+
+            // p.text(stackPart, xPos, newStack.y);
+            drawCMDS.push(["text", stackPart, xPos, newStack.y]);
+            newStack.stackXPositions.push(xPos);
+            prevWidth = p.textWidth(stackPart);
+            xPos += prevWidth + newStack.spacing;
+            // p.rect(200, 200, 50, 50);
+            // p.background(255);
+        }
+    }
+
+    /**
+     * Erases the stack visually 
+     */
+    p.eraseStack = function(stack) {
+
+        let stackParts = stack.getStack();
+        let prevWidth = 0;
+        let xPos = stack.x;
+        p.fill(bg_color);
+        p.textAlign(p.LEFT);
+        p.textSize(newStack.text_size);
+        // Erase the stack
+        for (let i = 0; i < stackParts.length; i++) {
+            let stackPart = stackParts[i];
+            // console.log("Writing: " + stackPart);
+
+            p.text(stackPart, xPos, stack.y);
+            prevWidth = p.textWidth(stackPart);
+            xPos += prevWidth + stack.spacing;
+            // p.rect(200, 200, 50, 50);
+            // p.background(255);
+        }
+        p.fill(txt_color);
+    }
+
+    /**
+     * Undoes a step in the visualizer
+     */
+    p.undoStep = function() {
+        step--;
+        p.background(bg_color);
+        p.image(vizStates[step], 0, 0);
+    };
+
+    p.processNextStep = function() {
+        let currPCommand = parsedData.vCMDList[step];
+        currPDescription = parsedData.vDescriptorList[step];
+        console.log("The current command is: " + currPCommand);
+        console.log("The current description is: " + currPDescription);
+        let pCMDParts = currPCommand.split("::");
+        let pCMDType = pCMDParts[0];
+        let currStack;
+        let currStackItem;
+        let currStackParts;
+        let drawCMDS;
+        let bgCMDS;
+        let xPos;
+        let hIdx;
+        let hXPos;
+        
+
+        alert_mode = false;
+        if (step == maxStep) {
+            // Show the descriptive text
+            p.fill(bg_color);
+            p.rect(0, 0, 658, 30);
+            p.fill(txt_color);
+            p.noStroke();
+
+            p.text(currPDescription, 10, 25);
+            switch (pCMDType) {
+                case "INIT_VAR":
+                    // Set the variable
+                    let newVar = new P5Var(pCMDParts[1], pCMDParts[2], pCMDParts[3], pCMDParts[4], pCMDParts[5], p.LEFT, txt_color);
+                    varDict[pCMDParts[1]] = newVar;
+                    
+                    // Draw the variable
+                    p.fill(txt_color);
+                    // p.stroke(stroke_color);
+                    p.textSize(newVar.text_size);
+                    // p.text(newVar.displayStr(), newVar.x, newVar.y);
+                    cmds.push(newVar);
+                    break;
+                case "UPDATE_VAR":
+                    let currVar = varDict[pCMDParts[1]];
+                    
+                    // Erase the old variable
+                    /* p.fill(bg_color);
+                    // p.stroke(bg_color);
+                    p.blendMode(p.DARKEST);
+                    p.text(currVar.displayStr(), currVar.x, currVar.y);
+                    p.fill(txt_color);
+                    p.blendMode(blend_mode);
+                    */
+                    // p.stroke(stroke_color);
+                    currVar.updateVal(pCMDParts[2]);
+                    // p.text(currVar.displayStr(), currVar.x, currVar.y);
+                    break;
+                case "GEN_STACK":
+                    // Generate a stack and store it in the var dictionary
+                    let newStack = new P5Stack(pCMDParts[2], pCMDParts[3], pCMDParts[4], pCMDParts[5], pCMDParts[6]);
+                    varDict[pCMDParts[1]] = newStack;
+                    newStack.x += xPad;
+                    newStack.y += yPad;
+
+
+                    console.log(newStack);
+                    p.drawStack(newStack);
+                    cmds.push(newStack);
+                    break;
+                case "STACK_NEXT_HIGHLIGHT":
+                    currStack = varDict[pCMDParts[1]];
+                    hIdx = currStack.nextHighlight();
+                    hXPos = currStack.stackXPositions[hIdx];
+                    currStackItem = currStack.stackParts[hIdx];
+                    
+                    // p.blendMode(p.BLEND);
+                    // p.fill([21, 71, 52]);
+                    // p.stroke([21, 71, 52]);
+                    bgCMDS = currStack.getBGCMDS();
+                    bgCMDS.push(["fill", [21, 71, 52]]);
+                    bgCMDS.push(["rect", hXPos - 3, currStack.y - 18, p.textWidth(currStackItem) + 5, 24]);
+                    // p.rect(hXPos - 3, currStack.y - 18, p.textWidth(currStackItem) + 5, 24);
+                    // p.blendMode(blend_mode);
+                    // p.fill(txt_color);
+                    // p.stroke(stroke_color);
+                    // p.text(currStackItem, hXPos, currStack.y);
+                    break;
+                case "STACK_PUSH":
+                    // Push the item onto the stack and draw the new element
+                    currStack = varDict[pCMDParts[1]];
+                    // p.textSize(currStack.text_size);
+                    
+                    // Draw the element
+                    // p.fill(txt_color);
+                    // p.stroke(stroke_color);
+                    currStackParts = currStack.getStack();
+                    if (currStackParts.length != 0) {
+                        xPos = currStack.stackXPositions[currStack.stackXPositions.length - 1] + p.textWidth(currStackParts[currStackParts.length - 1]) + currStack.spacing;
+                    } else {
+                        xPos = currStack.x
+                    }
+                    drawCMDS = currStack.getDrawCMDS();
+                    drawCMDS.push(["text", pCMDParts[2], xPos, currStack.y]);
+                    // p.text(pCMDParts[2], xPos, currStack.y);
+
+                    // Update the stack
+                    currStackParts.push(pCMDParts[2]);
+                    currStack.stackXPositions.push(xPos);
+                    break;
+                case "STACK_NEXT_RPOP":
+                    // Pops the item from the right side of the stack (where items are pushed onto)
+                    currStack = varDict[pCMDParts[1]];
+                    // p.textSize(currStack.text_size);
+
+                    // Draw the element
+                    // p.fill(sub_color);
+                    // p.stroke(bg_color);
+                    currStackParts = currStack.getStack();
+                    xPos = currStack.stackXPositions[currStack.stackXPositions.length - 1];
+                    // p.text(currStackParts[currStackParts.length - 1], xPos, currStack.y);
+                    drawCMDS = currStack.getDrawCMDS();
+                    drawCMDS.pop();
+
+                    // Update the stack and remove the element
+                    currStackParts.pop();
+                    currStack.stackXPositions.pop();
+                    break;
+                case "ENDGROUP":
+                    // Reset all variables. 
+                    if (currPDescription == "") {
+                        currPDescription = "Resetting environment for next dataset"
+                    }
+                    p.resetVars();
+                    break;
+                case "STACK_HIGHLIGHT_ERROR_1":
+                    currStack = varDict[pCMDParts[1]];
+                    hIdx = currStack.nextHighlight();
+                    hXPos = currStack.stackXPositions[hIdx];
+                    currStackItem = currStack.stackParts[hIdx];
+                    // Make a red highlight box
+                    bgCMDS = currStack.getBGCMDS();
+                    bgCMDS.push(["fill", [255, 0, 0]]);
+                    bgCMDS.push(["rect", hXPos - 3, currStack.y - 18, p.textWidth(currStackItem) + 5, 24]);
+                    break;
+                case "RESULT_ERROR":
+                    alert_mode = true;
+                    break;
+                case "STACK_HIGHLIGHT_ERROR+":
+                    // Apply stack highlight error 1 to all elements beginning at the specified index
+                    let specIdx = parseInt(pCMDParts[2], 10);
+                    currStack = varDict[pCMDParts[1]];
+                    currStackParts = currStack.getStack();
+                    bgCMDS = currStack.getBGCMDS();
+                    bgCMDS.push(["fill", [255, 0, 0]]);
+                    for (let i = specIdx; i < currStackParts.length; i++) {
+                        // Make a highlight error box.
+                        hXPos = currStack.stackXPositions[i];
+                        currStackItem = currStackParts[i];
+                        bgCMDS.push(["rect", hXPos - 3, currStack.y - 18, p.textWidth(currStackItem) + 5, 24]);
+                    }
+                    break;
+            }
+            p.redraw();
+            vizStates.push(p.get());
+            maxStep++;
+        } else {
+            // Restore the step
+            p.background(bg_color);
+            p.image(vizStates[step], 0, 0);
+        }
+        step++;
+        
+    };
+
+  };
+  
+  var p5Obj = new p5(s); // invoke p5.js
+
+/**
+ * STARTUP
+ * 
+ * 
+ * 
+ * 
+ * 
+ * STARTUP
+ */
+
+/**
+ * Run functions on load
+ */
+window.onload = function(e) {
+    let user = localStorage.getItem("userName");
+    let pin = localStorage.getItem("uIN");
+    if (user != null && pin != null) {
+        $("#autograder").css("display","");
+        exitSignIn();
+        toggleSignInButtons();
+        userName = user;
+        uIN = pin;
+        console.log("Loaded credentials from local storage");
+    }
 }

@@ -8,6 +8,7 @@
         
         <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+        <script src="p5.js"></script>
         <script src="feedbackpp.js"></script>
         <link rel="stylesheet" href="main.css">
 </head>
@@ -74,11 +75,31 @@
                                 </div>
                                 
                                 <div id = "direct-message-table" style ="display:table-cell;">
-                                    <button id = "run-debug" type = "button" class = "btn btn-primary" onclick="debug(1)" style = "display:none">Reset Debugger</button>
-                                    <button id = "run-debug-NS" type = "button" class = "btn btn-primary" onclick="debugNS()" style = "display:none">Next Step</button>
-                                    <button id = "run-debug-NL" type = "button" class = "btn btn-primary" onclick="debugNL()" style = "display:none">Next Line</button>
-                                    <div id ="debug-output"></div>
-                                    <div id ="debug-table"></div>
+                                    <div id = "debugger" style = "display:none">
+                                        <button id = "run-debug" type = "button" class = "btn btn-primary" onclick="debug(1)" style = "display:none">Reset Debugger</button>
+                                        <button id = "run-debug-NS" type = "button" class = "btn btn-primary" onclick="debugNS()" style = "display:none">Next Step</button>
+                                        <button id = "run-debug-NL" type = "button" class = "btn btn-primary" onclick="debugNL()" style = "display:none">Next Line</button>
+                                        <div id ="debug-output"></div>
+                                        <div id ="debug-table"></div>
+                                    </div>
+                                    <div id = "visualizer" style = "display:none">
+                                        <button id = "run-viz" type = "button" class = "btn btn-primary" onclick="visualizeReset()" style = "display:none">Reset Visualizer</button>
+                                        <button id = "run-viz-forward" type = "button" class = "btn btn-primary" onclick="visualizeNext()" style = "display:none">Next Step</button>
+                                        <button id = "run-viz-back" type = "button" class = "btn btn-primary" onclick="visualizePrev()" style = "display:none">Previous Step</button>
+                                        <button id = "run-viz-play" type = "button" class = "btn btn-primary" onclick="visualizePlay()" style = "display:none">Play</button>
+                                        <div id = "run-viz-speed-label">
+                                            Speed:
+                                        </div>
+                                        <select class="form-select" aria-label="Visualizer Speed" id = "run-viz-speed-chooser">
+                                            <option value="0.25">x0.25</option>
+                                            <option value="0.5">x0.5</option>
+                                            <option value="1" selected>x1</option>
+                                            <option value="2">x2</option>
+                                            <option value="3">x3</option>
+                                            <option value="4">x4</option>
+                                          </select>
+                                        <div id ="viz-canvas-area"></div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

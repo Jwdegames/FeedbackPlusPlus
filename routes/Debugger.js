@@ -20,7 +20,7 @@ var pyProgDict = {}
         console.log("Import violation detected!");
         return "IMPORT VIOLATION - Only following imports allowed: " + allowedImports;
     }
-    if (fileTXT.indexOf("open(") != -1) {
+    if (fileTXT.match(/open *\(/)) {
         console.log("Open violation detected!");
         return "OPEN VIOLATION - No files may be opened!";
     }

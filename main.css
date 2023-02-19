@@ -253,3 +253,13 @@
     top: 100px;
     right: 175px;
   }
+
+  #viz-canvas-area {
+    width: 568px;
+    height: 650px;
+  }
+
+  #run-viz-speed-label {
+    width: 50px;
+    display: inline;
+  }
