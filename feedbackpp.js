@@ -1431,6 +1431,8 @@ function toggleDV() {
         enableDebugButtons();
         $("#debugger").css("display","");
         $("#visualizer").css("display","none");
+        showingDebugger = true;
+        showingVisualizer = false;
     } else {
         toggleDVButton.innerHTML = "Switch to Debugger";
         if (!hasInitViz) {
@@ -1440,6 +1442,8 @@ function toggleDV() {
         enableVizButtons();
         $("#debugger").css("display","none");
         $("#visualizer").css("display","");
+        showingDebugger = false;
+        showingVisualizer = true;
     }
 }
 
