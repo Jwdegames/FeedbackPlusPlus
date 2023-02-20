@@ -302,6 +302,12 @@ function debug(tcNumStr) {
     suspendDebug();
     disableDebugButtons();
     disableVizButtons();
+    if (showingVisualizer) {
+        toggleVisualizerVis();
+    } 
+    if (!showingDebugger) {
+        toggleDebuggerVis();
+    }
     disableGeneralComponents();
     document.getElementById("submissionFile").disabled = true;
     document.querySelector("#toggle-dv").innerHTML = "Switch to Visualizer";
@@ -1471,7 +1477,7 @@ let s = p => {
   
     p.setup = function() {
         console.log("Setting up canvas!");
-        let pCanvas = p.createCanvas(568, 650);
+        let pCanvas = p.createCanvas(2000, 2000);
 
         pCanvas.parent('viz-canvas-area');
         p.resetViz();

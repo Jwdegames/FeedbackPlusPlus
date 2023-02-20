@@ -257,6 +257,7 @@
   #viz-canvas-area {
     width: 568px;
     height: 650px;
+    overflow-x: scroll;
   }
 
   #run-viz-speed-label {
