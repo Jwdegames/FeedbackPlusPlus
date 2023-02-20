@@ -56,6 +56,7 @@ function generateVCMDs(tcInput, fileToRun) {
         rpn_stack = []
         // Go through each item in the input, and generate the neccessary visualization commands
         let failed = false;
+        let stackExists = false;
         for (let tcItemIdx = 0; tcItemIdx < tcIList.length; tcItemIdx++) {
             tcItem = tcIList[tcItemIdx];
             // console.log("The next tcItem is " + tcItem + " with a length of " + tcItem.length);
@@ -95,7 +96,7 @@ function generateVCMDs(tcInput, fileToRun) {
 
                 // Store the values!
                 // Insert commands here
-
+                let breakLoop = false;
                 let opResult = 0;
                 // Perform the operation
                 switch(tcItem) {
@@ -109,16 +110,63 @@ function generateVCMDs(tcInput, fileToRun) {
                         opResult = num1 * num2
                         break;
                     case "/":
+                        if (num2 == 0) {
+                            vCMDList.push("STACK_HIGHLIGHT_ERROR_0::CALC");
+                            vDescriptorList.push("ERROR: Can't divide by 0");
+                            vCMDList.push("RESULT_ERROR");
+                            vDescriptorList.push("ERROR: Can't divide by 0");
+                            vCMDList.push("ENDGROUP");
+                            vDescriptorList.push("");
+                            breakLoop = true;
+                            failed = true;
+                            break;
+                        }
+
                         opResult = Math.floor(num1 / num2)
                         break;
                     case "^":
-                        opResult = Math.pow(num1, num2)
+                        if (num1 == 0 && num2 < 0) {
+                            vCMDList.push("STACK_HIGHLIGHT_ERROR_0::CALC");
+                            vDescriptorList.push("ERROR: Can't raise 0 to a negative power");
+                            vCMDList.push("RESULT_ERROR");
+                            vDescriptorList.push("ERROR: Can't raise 0 to a negative power");
+                            vCMDList.push("ENDGROUP");
+                            vDescriptorList.push("");
+                            breakLoop = true;
+                            failed = true;
+                            break;
+                        }
+                        if (Math.abs(num1) > 100 || Math.abs(num2) > 100) {
+                            vCMDList.push("STACK_HIGHLIGHT_ERROR_0::CALC");
+                            vDescriptorList.push("ERROR: num1 or num2 is too large to perform the power operation");
+                            vCMDList.push("RESULT_ERROR");
+                            vDescriptorList.push("ERROR: num1 or num2 is too large to perform the power operation");
+                            vCMDList.push("ENDGROUP");
+                            vDescriptorList.push("");
+                            breakLoop = true;
+                            failed = true;
+                            break;
+                        }
+                        opResult = Math.floor(Math.pow(num1, num2));
                         break;
                     case "%":
-                        opResult = num1 % num2
+                        if (num2 == 0) {
+                            vCMDList.push("STACK_HIGHLIGHT_ERROR_0::CALC");
+                            vDescriptorList.push("ERROR: Can't divide by 0");
+                            vCMDList.push("RESULT_ERROR");
+                            vDescriptorList.push("ERROR: Can't divide by 0");
+                            vCMDList.push("ENDGROUP");
+                            vDescriptorList.push("");
+                            breakLoop = true;
+                            failed = true;
+                            break;
+                        }
+                        opResult = ((num1 % num2) + num2) % num2;
                         break;
                     }
-                    
+                if (breakLoop) {
+                    break;
+                }
                 vCMDList.push("UPDATE_VAR::op_result::" + opResult);
                 let vTXT = "The calculator performs the operation " + num1 + " " + tcItem + " " + num2 + ", and stores it in op_result, which is now " + opResult;
                 vDescriptorList.push(vTXT);
@@ -134,7 +182,8 @@ function generateVCMDs(tcInput, fileToRun) {
                     vDescriptorList.push("ERROR: The calculator can only operate on valid base 10 numbers!"  + tcItem + " is not a valid base 10 number!");
                     vCMDList.push("ENDGROUP");
                     vDescriptorList.push("");
-                    continue;
+                    failed = true;
+                    break;
                 } else {
                     // Add number to the stack
                     vCMDList.push("STACK_NEXT_HIGHLIGHT::CALC");
@@ -146,6 +195,7 @@ function generateVCMDs(tcInput, fileToRun) {
             }
 
         }
+        console.log("Failed: " + failed);
         // Do this if we didn't encounter a failure before
         if (!failed) {
             // Ensure stack is empty

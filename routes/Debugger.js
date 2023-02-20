@@ -33,7 +33,7 @@ var pyProgDict = {}
 }
 
 router.post('/debug', function(req, res)  {
-    let securityCheck = checkImports(req.body.fileText, ['import sys']);
+    let securityCheck = checkImports(req.body.fileText, ['import sys', 'import math']);
     if (securityCheck != "") {
         console.log("security check failed");
         res.send(securityCheck);

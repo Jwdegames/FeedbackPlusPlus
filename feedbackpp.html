@@ -70,13 +70,14 @@
 
                                 <div id = "user-table" style ="display:table-cell;">
                                     <button id = "run-tests" type = "button" class = "btn btn-primary" onclick="autograde()" style = "display:none">Run Test Cases</button>
+                                    <button id = "toggle-dv" type = "button" class = "btn btn-primary" onclick="toggleDV()" style = "display:none">Switch to Visualizer</button>
                                     <div id ="tc-table"></div>
                                     <div id ="tc-output"></div>
                                 </div>
                                 
                                 <div id = "direct-message-table" style ="display:table-cell;">
                                     <div id = "debugger" style = "display:none">
-                                        <button id = "run-debug" type = "button" class = "btn btn-primary" onclick="debug(1)" style = "display:none">Reset Debugger</button>
+                                        <button id = "run-debug" type = "button" class = "btn btn-primary" onclick="debugReset()" style = "display:none">Reset Debugger</button>
                                         <button id = "run-debug-NS" type = "button" class = "btn btn-primary" onclick="debugNS()" style = "display:none">Next Step</button>
                                         <button id = "run-debug-NL" type = "button" class = "btn btn-primary" onclick="debugNL()" style = "display:none">Next Line</button>
                                         <div id ="debug-output"></div>
@@ -97,6 +98,7 @@
                                             <option value="2">x2</option>
                                             <option value="3">x3</option>
                                             <option value="4">x4</option>
+                                            <option value="5">x5</option>
                                           </select>
                                         <div id ="viz-canvas-area"></div>
                                     </div>

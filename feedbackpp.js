@@ -4,6 +4,9 @@ var textFromFileLoaded;
 var fileTableDat;
 var fileName;
 var tcCount;
+var normalTCCount;
+var randomTCCount;
+var customTCCount;
 var tcDone = 0;
 var tcResults;
 var tcStatuses;
@@ -21,6 +24,7 @@ var showingVisualizer = false;
 var vizPlayMode = false;
 var vizPlaySpeed = 1;
 var playIntervalID = undefined;
+var hasInitViz = false;
 
 
 var highlightedLineNum = 0;
@@ -41,21 +45,23 @@ var fileEvent;
 
 
 /**
- * Disables the file selector, run test cases button, logout button, and settings button
+ * Disables the file selector, run test cases button, debug/visualizier togglez, logout button, and settings button
  */
 function disableGeneralComponents() {
     document.querySelector("#run-tests").disabled = true;
     document.querySelector("#logout-section").disabled = true;
+    document.querySelector("#toggle-dv").disabled = true;
     document.querySelector("#submissionFile").disabled = true;
 }
 
 /**
- * Enables the file selector, run test cases button, logout button, and settings button
+ * Enables the file selector, run test cases button, debug/visualizier toggle, logout button, and settings button
  */
 function enableGeneralComponents() {
 
     document.querySelector("#run-tests").disabled = false;
     document.querySelector("#logout-section").disabled = false;
+    document.querySelector("#toggle-dv").disabled = false;
     document.querySelector("#submissionFile").disabled = false;
 }
 
@@ -143,6 +149,17 @@ function checkCompletion() {
             }
         }
         console.log("Test cases passed: " + tcPassed + "/" + tcCount);
+        enableDebugButtons();
+        enableVizButtons();
+        if (showingVisualizer) {
+            toggleVisualizerVis();
+        }
+        if (!showingDebugger) {
+            toggleDebuggerVis();
+        }
+        $("#toggle-dv").css("display", "");
+        document.querySelector("#toggle-dv").innerHTML = "Switch to Visualizer";
+        hasInitViz = false;
         let ajaxurl = "/Database/updateTestResults";
         $.post(ajaxurl,
             {
@@ -167,6 +184,8 @@ function runTestCases(numTC) {
     tcResults = []
     tcStatuses = []
     noDebug = false;
+    disableDebugButtons();
+    disableVizButtons();
     for (let i = 0; i < numTC; i++) {
         // tcResults.push(0);
         // tcStatuses.push(0);
@@ -210,8 +229,25 @@ function disableDebugButtons() {
     document.querySelector("#run-debug-NL").disabled = true;
     document.querySelector("#run-debug-NS").disabled = true;
     for (let i = 0; i < tcCount; i++) {
-        document.querySelector("#tcd" + (i + 1)).disabled = true;
+        let tcd = document.querySelector("#tcd" + (i + 1))
+        if (tcd != null) {
+            tcd.disabled = true;
+        }
     }
+}
+
+function showDebugButtons() {
+    // Display debug buttons
+    $("#run-debug").css("display","");
+    $("#run-debug-NL").css("display","");
+    $("#run-debug-NS").css("display","");
+}
+
+function hideDebugButtons() {
+    // Hide debug buttons
+    $("#run-debug").css("display","none");
+    $("#run-debug-NL").css("display","none");
+    $("#run-debug-NS").css("display","none");
 }
 
 function enableDebugButtons() {
@@ -253,12 +289,22 @@ function toggleDebuggerVis() {
     showingDebugger = !showingDebugger;
 }
 
+/**
+ * Resets the debugger with the current test case
+ */
+function debugReset() {
+    debug(currTC);
+}
+
 function debug(tcNumStr) {
     runningDebug = true;
     currTC = tcNumStr;
     suspendDebug();
     disableDebugButtons();
+    disableVizButtons();
+    disableGeneralComponents();
     document.getElementById("submissionFile").disabled = true;
+    document.querySelector("#toggle-dv").innerHTML = "Switch to Visualizer";
     var ajaxurl = "/Debugger/debug";
     console.log("Sending debug post");
 
@@ -285,6 +331,8 @@ function debugNL() {
     runningDebug = true;
     // disable debug buttons
     disableDebugButtons();
+    disableVizButtons();
+    disableGeneralComponents();
     document.getElementById("submissionFile").disabled = true;
     var ajaxurl = "/Debugger/sendDebugMSG";
     console.log("Sending debug post");
@@ -313,6 +361,8 @@ function debugNL() {
     runningDebug = true;
     // disable debug buttons
     disableDebugButtons();
+    disableVizButtons();
+    disableGeneralComponents();
     document.getElementById("submissionFile").disabled = true;
     var ajaxurl = "/Debugger/sendDebugMSG";
     console.log("Sending debug post");
@@ -659,9 +709,7 @@ function processDebugInfo(data, tcNumStr) {
     debugTableBody.scrollTop(debugTableBody.prop("scrollHeight"));
 
     // Enable debug buttons
-    $("#run-debug").css("display","");
-    $("#run-debug-NL").css("display","");
-    $("#run-debug-NS").css("display","");
+    showDebugButtons();
     if (ended) {
         document.querySelector("#run-debug").disabled = false;
         document.querySelector("#run-debug-NL").disabled = true;
@@ -678,6 +726,8 @@ function processDebugInfo(data, tcNumStr) {
     }
     runningDebug = false;
     tryEnableFileInput();
+    enableVizButtons();
+    enableGeneralComponents();
 }
 
 /**
@@ -694,6 +744,10 @@ function suspendDebug() {
 function autograde() {
     document.querySelector("#run-tests").disabled = true;
     document.getElementById("submissionFile").disabled = true;
+    disableGeneralComponents();
+    if (showingVisualizer) {
+        toggleVisualizerVis();
+    }
     tcDone = 0;
     runningTC = true;
     console.log("Running test cases");
@@ -710,7 +764,12 @@ function autograde() {
         function(data, status) {
             console.log("STATUS:" + status);
             console.log(data);
-            numTC = parseInt(data);
+            //numTC = parseInt(data);
+            let tcArray = JSON.parse(data);
+            let numTC = parseInt(tcArray[0], 10);
+            let numNormalTC = parseInt(tcArray[1], 10);
+            let numRandomTC = parseInt(tcArray[2], 10);
+            let numCustomTC = parseInt(tcArray[3], 10);
             tcCount = numTC;
             runTestCases(numTC);
             
@@ -825,7 +884,13 @@ function logout() {
         }
 
     );*/
+    // Hide components
     $("#autograder").css("display","none");
+    $("#toggle-dv").css("display","none");
+    document.querySelector("#tc-table").innerHTML = "";
+    document.querySelector("#tc-output").innerHTML = "";
+    $("#debugger").css("display","none");
+    $("#visualizer").css("display","none");
     // Remove credentials
     localStorage.removeItem("userName");
     localStorage.removeItem("uIN");
@@ -1015,7 +1080,10 @@ function disableVizButtons() {
     document.querySelector("#run-viz-back").disabled = true;
     document.querySelector("#run-viz-play").disabled = true;
     for (let i = 0; i < tcCount; i++) {
-        document.querySelector("#tcv" + (i + 1)).disabled = true;
+        let tcv = document.querySelector("#tcv" + (i + 1))
+        if (tcv != null) {
+            tcv.disabled = true;
+        }
     }
 }
 
@@ -1086,6 +1154,7 @@ function getTCInput(tcNumStr) {
 function visualize(tcNumStr) {
     runningViz = true;
     currTC = tcNumStr;
+    hasInitViz = true;
     suspendDebug();
     disableDebugButtons();
     document.getElementById("submissionFile").disabled = true;
@@ -1119,7 +1188,7 @@ function visualize(tcNumStr) {
             showVizButtons();
             visualizeReset();
             enableTCDebugButtons();
-            
+            document.querySelector("#toggle-dv").innerHTML = "Switch to Debugger";
         }
     );
 }
@@ -1349,6 +1418,28 @@ function visualizePlayStep() {
         p5Obj.processNextStep();
     } else {
         visualizePlay();
+    }
+}
+
+// Toggles between the debugger and the visualizer
+function toggleDV() {
+    let toggleDVButton =  document.querySelector("#toggle-dv")
+    let btn_text = toggleDVButton.innerHTML;
+    if (btn_text == "Switch to Debugger") {
+        toggleDVButton.innerHTML = "Switch to Visualizer";
+        showDebugButtons();
+        enableDebugButtons();
+        $("#debugger").css("display","");
+        $("#visualizer").css("display","none");
+    } else {
+        toggleDVButton.innerHTML = "Switch to Debugger";
+        if (!hasInitViz) {
+            visualize(currTC);
+        }
+        showVizButtons();
+        enableVizButtons();
+        $("#debugger").css("display","none");
+        $("#visualizer").css("display","");
     }
 }
 
