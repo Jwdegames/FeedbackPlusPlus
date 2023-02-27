@@ -1,30 +1,3 @@
-# class RPN_Calculator:
-#     def __init__(self):
-#         self.reset()
-
-
-#     def reset(self):
-#         '''Resets the fail flags and stack'''
-#         self.stack = []
-#         self.failPop = False
-#         self.failSyntax = False
-
-#     def pop(self):
-#         '''Returns false if size of stack less than 2. Otherwise returns a tuple containing the top two numbers on
-#         the stack, where the leftmost number is the top number on the stack'''
-#         if len(self.stack) < 2:
-#             return False
-#         return (self.stack.pop(), self.stack.pop())
-
-#     def failCondition(self):
-#         '''Outputs a fail message if a fail flag was set. Otherwise outputs None.'''
-#         if self.failPop == True:
-#             return "Calculation failed. Not enough numbers in stack when operation requested."
-#         elif self.failSyntax == True:
-#             return "Calculation failed. There are extra numbers in the stack."
-#         else:
-#             return None
-
 def rpn_calculate(inputString):
     '''Does RPN Calculation on a string'''
     # self.reset()

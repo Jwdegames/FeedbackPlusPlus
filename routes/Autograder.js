@@ -484,8 +484,8 @@ router.post('/sendGradeRequest', function(req, res)  {
         testCase = generateRandomTC(tcIndex);
 
     } else {
-        if (req.body.testCaseInput != undefined) {
-            testCase = req.body.testCaseInput;
+        if (req.body.tcInput != undefined) {
+            testCase = req.body.tcInput;
         } else {
             testCase = "";
         }

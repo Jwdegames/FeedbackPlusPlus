@@ -14,7 +14,9 @@ var tcPassed;
 var uIN = "0";
 var userName;
 var currTCIdx; 
-var currTC;
+var currTC = "1";
+var currCustomTC;
+var customTCInputs = {};
 var noDebug = false;
 var runningDebug = false;
 var runningTC = false;
@@ -25,8 +27,9 @@ var vizPlayMode = false;
 var vizPlaySpeed = 1;
 var playIntervalID = undefined;
 var hasInitViz = false;
-
-
+var breakpoints = {};
+var savedBP = {};
+var canSetBP = false;
 var highlightedLineNum = 0;
 var globalDebugLines = "";
 var gDLLen = 0;
@@ -97,11 +100,16 @@ function makeTestCaseTable() {
     tcTable += "<tbody id = 'tc-table-tbody'><tr><th class = 'th-tc-num'>Test Case #</th>";
     tcTable += "<th>Pass / Fail</th><th>View / Debug Test Case</th></tr>";
     for (let i = 0; i < tcCount; i++) {
-        tcTable += "<tr><td class = 'td-tc-num'>"+(i + 1)+"</td>";
+        tcTable += "<tr><td class = 'td-tc-num'>"+(i + 1);
+        if (i + 1 > normalTCCount + randomTCCount) {
+            // Make the button to edit the custom test case
+            tcTable += "<input type = 'submit' class = 'btn btn-primary btn-block' id = 'tcCustomEdit"+(i+1)+"' value = 'Edit' onclick = 'editCustomTC("+(i + 1)+")'></input>";
+        }
+        tcTable += "</td>";
         if (tcStatuses[i] == "PASS") {
-            tcTable += "<td class = 'td-tc-pf' style = 'color:green'><b>"+tcStatuses[i]+"</b></td>"
+            tcTable += "<td id = 'td-tc-pf-" + (i + 1) + "' class = 'td-tc-pf' style = 'color:green'><b>"+tcStatuses[i]+"</b></td>"
         } else {
-            tcTable += "<td class = 'td-tc-pf' style = 'color:red'><b>"+tcStatuses[i]+"</b></td>"
+            tcTable += "<td id = 'td-tc-pf-" + (i + 1) + "' class = 'td-tc-pf' style = 'color:red'><b>"+tcStatuses[i]+"</b></td>"
         }
         tcTable += "<td class = 'td-tc-view'><div class ='form-group'><div class = 'row no-gutters'>";
         tcTable += "<div class = 'col-sm-6'><input type='submit' class='btn btn-primary btn-block' id='tc"+(i + 1)+"' value='View' onclick='makeTestCaseOutput("+(i)+")'></div>"
@@ -140,7 +148,7 @@ function checkCompletion() {
             debug("1");
         }
         runningTC = false;
-        tryEnableFileInput();
+        // tryEnableFileInput();
         // Get the number of test cases passed
         tcPassed = 0;
         for (let i = 0; i < tcCount; i++) {
@@ -149,8 +157,8 @@ function checkCompletion() {
             }
         }
         console.log("Test cases passed: " + tcPassed + "/" + tcCount);
-        enableDebugButtons();
-        enableVizButtons();
+        // enableDebugButtons();
+        // enableVizButtons();
         if (showingVisualizer) {
             toggleVisualizerVis();
         }
@@ -184,6 +192,7 @@ function runTestCases(numTC) {
     tcResults = []
     tcStatuses = []
     noDebug = false;
+
     disableDebugButtons();
     disableVizButtons();
     for (let i = 0; i < numTC; i++) {
@@ -196,12 +205,17 @@ function runTestCases(numTC) {
     for (let i = 0; i < numTC; i++) {
         let tcNumStr = (i + 1) + ""
         console.log("Executing post " + tcNumStr);
+        let tcInput = "";
+        if (i in customTCInputs) {
+            tcInput = customTCInputs[i];
+        }
         $.post(ajaxurl,
             {
                 test: "hi",
                 fileText: textFromFileLoaded,
                 userID: uIN,
                 tcNum: tcNumStr,
+                tcInput: tcInput,
             },
             function(data, status) {
                 console.log("STATUS:" + status);
@@ -228,6 +242,10 @@ function disableDebugButtons() {
     document.querySelector("#run-debug").disabled = true;
     document.querySelector("#run-debug-NL").disabled = true;
     document.querySelector("#run-debug-NS").disabled = true;
+    document.querySelector("#run-debug-PB").disabled = true;
+    document.querySelector("#run-debug-SB").disabled = true;
+    document.querySelector("#run-debug-LB").disabled = true;
+    document.querySelector("#run-debug-CB").disabled = true;
     for (let i = 0; i < tcCount; i++) {
         let tcd = document.querySelector("#tcd" + (i + 1))
         if (tcd != null) {
@@ -241,6 +259,11 @@ function showDebugButtons() {
     $("#run-debug").css("display","");
     $("#run-debug-NL").css("display","");
     $("#run-debug-NS").css("display","");
+    $("#run-debug-PB").css("display","");
+    $("#run-debug-BPL").css("display","");
+    $("#run-debug-SB").css("display","");
+    $("#run-debug-LB").css("display","");
+    $("#run-debug-CB").css("display","");
 }
 
 function hideDebugButtons() {
@@ -248,12 +271,21 @@ function hideDebugButtons() {
     $("#run-debug").css("display","none");
     $("#run-debug-NL").css("display","none");
     $("#run-debug-NS").css("display","none");
+    $("#run-debug-PB").css("display","none");
+    $("#run-debug-BPL").css("display","none");
+    $("#run-debug-SB").css("display","none");
+    $("#run-debug-LB").css("display","none");
+    $("#run-debug-CB").css("display","none");
 }
 
 function enableDebugButtons() {
     document.querySelector("#run-debug").disabled = false;
     document.querySelector("#run-debug-NL").disabled = false;
     document.querySelector("#run-debug-NS").disabled = false;
+    document.querySelector("#run-debug-PB").disabled = false;
+    document.querySelector("#run-debug-SB").disabled = false;
+    document.querySelector("#run-debug-LB").disabled = false;
+    document.querySelector("#run-debug-CB").disabled = false;
     for (let i = 0; i < tcCount; i++) {
         document.querySelector("#tcd" + (i + 1)).disabled = false;
     }
@@ -273,7 +305,10 @@ function enableTCDebugButtons() {
  */
 function disableTCDebugButtons() {
     for (let i = 0; i < tcCount; i++) {
-        document.querySelector("#tcd" + (i + 1)).disabled = true;
+        let tcd = document.querySelector("#tcd" + (i + 1))
+        if (tcd != null) {
+            tcd.disabled = true;
+        }
     }
 }
 
@@ -298,10 +333,12 @@ function debugReset() {
 
 function debug(tcNumStr) {
     runningDebug = true;
+    canSetBP = false;
     currTC = tcNumStr;
     suspendDebug();
     disableDebugButtons();
     disableVizButtons();
+    clearBP(false);
     if (showingVisualizer) {
         toggleVisualizerVis();
     } 
@@ -321,6 +358,7 @@ function debug(tcNumStr) {
             fileText: textFromFileLoaded,
             userID: uIN,
             tcNum: tcNumStr,
+            tcInput: getTCInput(tcNumStr),
         },
         function(data, status) {
             console.log("STATUS:" + status);
@@ -335,6 +373,7 @@ function debug(tcNumStr) {
  */
 function debugNL() {
     runningDebug = true;
+    canSetBP = false;
     // disable debug buttons
     disableDebugButtons();
     disableVizButtons();
@@ -365,6 +404,7 @@ function debugNL() {
  */
  function debugNS() {
     runningDebug = true;
+    canSetBP = false;
     // disable debug buttons
     disableDebugButtons();
     disableVizButtons();
@@ -391,18 +431,77 @@ function debugNL() {
 }
 
 /**
+ * Continues the debugger until the next breakpoint
+ */
+function debugPB() {
+    runningDebug = true;
+    // disable debug buttons
+    disableDebugButtons();
+    disableVizButtons();
+    disableGeneralComponents();
+    var ajaxurl = "/Debugger/sendDebugMSG";
+    console.log("Sending debug post");
+    let tcNumStr = (currTCIdx + 1) + "";
+    $.post(ajaxurl,
+        {
+            test: "hi",
+            fileText: textFromFileLoaded,
+            userID: uIN,
+            tcNum: tcNumStr,
+            message: "playUntilBreak"
+        },
+        function(data, status) {
+            console.log("STATUS:" + status);
+            console.log(data);
+            dataArray = [data];
+            debugGLN(dataArray, tcNumStr);
+        }
+    );
+}
+
+/**
+ * Continues the debugger to the end, ignoring breakpoints
+ */
+function debugP() {
+    runningDebug = true;
+    // disable debug buttons
+    disableDebugButtons();
+    disableVizButtons();
+    disableGeneralComponents();
+    var ajaxurl = "/Debugger/sendDebugMSG";
+    console.log("Sending debug post");
+    let tcNumStr = (currTCIdx + 1) + "";
+    $.post(ajaxurl,
+        {
+            test: "hi",
+            fileText: textFromFileLoaded,
+            userID: uIN,
+            tcNum: tcNumStr,
+            message: "play"
+        },
+        function(data, status) {
+            console.log("STATUS:" + status);
+            console.log(data);
+            dataArray = [data];
+            debugGLN(dataArray, tcNumStr);
+        }
+    );
+}
+
+/**
  * Finds the line number from pdb list . 
  */
 
 function findLNFromData(data) {
     let lNum = 0;
     let lines = data.split("\n");
+    console.log(lines);
     for (let i = 0; i < lines.length; i++) {
         let cLine = lines[i];
         let cLineTrim = cLine.trim();
         cLineParts = cLineTrim.slice(cLineTrim.indexOf(" ")).trim();
         console.log(cLineParts);
-        if (cLineParts.length >= 2 && cLineParts.slice(0, 2) == "->") {
+        if (cLineParts.length >= 2 && cLineParts.indexOf("->\t") != -1) {
             lNum = cLineTrim.slice(0, cLineTrim.indexOf(" "));
             break;
         }
@@ -604,6 +703,7 @@ function getVarsJsonOld(data) {
                                 },
                                 function(data, status) {
                                     console.log("STATUS GET LOCAL VARS:" + status);
+                                    console.log("Local data: " + data);
                                     // Get the variable info
                                     localJVD = getVarsJson(data, 1);
                                     prevData.push(localJVD);
@@ -698,8 +798,9 @@ function processDebugInfo(data, tcNumStr) {
     debugTable += "<td class = 'th-debug-type'>Type</td><td class = 'th-debug-value'>Value</tr>";
     Object.keys(totalJVD).forEach(function(key, index) {
         // Don't do the excluded keys
-        excludedKeys = ["__builtins__", "__name__", "__file__", "var182764"]
+        excludedKeys = ["__builtins__", "__name__", "__file__", "var182764", "pe:|", "ype:|", "pe:| <class \\'list\\'>", "pe:| <class \\\\\\'list\\\\\\'>", "ype:| <class \\'list\\'>"]
         if (!(excludedKeys.includes(key))) {
+            console.log("Adding key:" + key );
             debugTable += "<tr><td class = 'td-debug-name'>"+key+"</td>";
             let cutKey = totalJVD[key].type.slice(1,-1);
             let cutKeyStartIdx = cutKey.indexOf("'");
@@ -717,12 +818,7 @@ function processDebugInfo(data, tcNumStr) {
     // Enable debug buttons
     showDebugButtons();
     if (ended) {
-        document.querySelector("#run-debug").disabled = false;
-        document.querySelector("#run-debug-NL").disabled = true;
-        document.querySelector("#run-debug-NS").disabled = true;
-        for (let i = 0; i < tcCount; i++) {
-            document.querySelector("#tcd" + (i + 1)).disabled = false;
-        }
+        disableDebugButtons();
     } else {
         // Enable the debugger
         if (!showingDebugger) {
@@ -734,6 +830,7 @@ function processDebugInfo(data, tcNumStr) {
     tryEnableFileInput();
     enableVizButtons();
     enableGeneralComponents();
+    canSetBP = true;
 }
 
 /**
@@ -748,6 +845,7 @@ function suspendDebug() {
 }
 
 function autograde() {
+    canSetBP = false;
     document.querySelector("#run-tests").disabled = true;
     document.getElementById("submissionFile").disabled = true;
     disableGeneralComponents();
@@ -773,9 +871,9 @@ function autograde() {
             //numTC = parseInt(data);
             let tcArray = JSON.parse(data);
             let numTC = parseInt(tcArray[0], 10);
-            let numNormalTC = parseInt(tcArray[1], 10);
-            let numRandomTC = parseInt(tcArray[2], 10);
-            let numCustomTC = parseInt(tcArray[3], 10);
+            normalTCCount = parseInt(tcArray[1], 10);
+            randomTCCount = parseInt(tcArray[2], 10);
+            customTCCount = parseInt(tcArray[3], 10);
             tcCount = numTC;
             runTestCases(numTC);
             
@@ -829,28 +927,33 @@ function displayFileData(event) {
         // Close debug buttons
         fileEvent = event;
         suspendDebug();
-        $("#run-debug").css("display","none");
-        $("#run-debug-NL").css("display","none");
-        $("#run-debug-NS").css("display","none");
+        disableDebugButtons();
+        document.querySelector("#toggle-dv").disabled = true;
+        disableVizButtons();
         // Display the data in the file
 
         var fileReader = new FileReader();
         fileName = fileToLoad.name;
         fileReader.onload = function(fileLoadedEvent){
             textFromFileLoaded = fileLoadedEvent.target.result;
+            breakpoints = {};
             // console.log(textFromFileLoaded);
             fileTableDat = "<div class='form-group shadow-textarea' style='margin-left:50px'>";
-            fileTableDat += "<label for='exampleFormControlTextarea6' style='text-decoration:underline; font-weight:bold;'>Your file:</label>"
+            fileTableDat += "<label for='file-submission-label' style='text-decoration:underline; font-weight:bold;'>Your file:</label>"
+            fileTableDat += "<div id = 'file-submission-wrapper'>";
             fileTableDat += "<div contenteditable='false' class='form-control z-depth-1' id='submission-contents' readonly>";
+
             fileLines = textFromFileLoaded.split("\n");
             for (let i = 0; i < fileLines.length; i++) {
                 // console.log(fileLines[i]);
                 let newContent = htmlSpacesBeginning(fileLines[i])
                 // console.log("New content: " + newContent);
                 // console.log("New file line: " + "<p class = 'file-line'><span class = 'file-line-index'>" + (i + 1) + "</span>&nbsp" + newContent + "</p>");
+                fileTableDat += "<div class = 'file-line-div' onclick = 'toggleBP(" + (i + 1) + ")'><div id = 'bp-" + (i + 1) + "' class = 'breakpoint'>&#x25CF;</div>"
                 fileTableDat += "<p class = 'file-line' id = 'file-line" + (i + 1) + "'><span class = 'file-line-index'>" + (i + 1) + "</span>&nbsp" + newContent + "</p>";
+                fileTableDat += "</div>"
             }
-            fileTableDat += "</textarea></div><br>";
+            fileTableDat += "</textarea></div></div><br>";
             // fileTableDat += '<div class="md-form" style="margin-left:0px"><i class="fas fa-pencil-alt prefix"></i><label for="form10">Send a message:</label><textarea id="gmsg-send" class="md-textarea form-control" rows="3" cols="75" onkeypress="if(event.keyCode == 13) {sendGlobalMsg();}"></textarea></div></div>';
             // document.getElementById("file-table").value = textFromFileLoaded;
             // console.log(fileTableDat);
@@ -870,12 +973,219 @@ function displayFileData(event) {
 
 }
 
+
+/**
+ * loads breakpoints
+ */
+function debugLB() {
+    let keys = Object.keys(breakpoints);
+    for (let i = 0; i < keys.length; i++) {
+        let key = keys[i]
+        $("#bp-" + key).css("display", "");
+        // Tell the debugger to kill it
+    }
+    var ajaxurl = "/Debugger/sendDebugMSG";
+    $.post(ajaxurl,
+        {
+            test: "hi",
+            userID: uIN,
+            tcNum: currTC,
+            message: "clearBreaks", 
+        },
+        function(data, status) {
+            console.log("STATUS:" + status);
+            console.log(data);
+            console.log("Setting breakpoints:")
+            breakpoints = JSON.parse(JSON.stringify(savedBP));
+            let keys2 = Object.keys(breakpoints);
+            for (let i2 = 0; i2 < keys2.length; i2++) {
+                let key2 = keys2[i2]
+                if (breakpoints[key2]) {
+                    // Enable the breakpoint if it's set to true
+                    $("#bp-" + key2).css("display", "inline");
+                    var ajaxurl = "/Debugger/sendDebugMSG";
+                    $.post(ajaxurl,
+                        {
+                            test: "hi",
+                            fileText: textFromFileLoaded,
+                            userID: uIN,
+                            tcNum: currTC,
+                            message: "setBreak", 
+                            bpNum: key2,
+                        },
+                        function(data, status) {
+                            console.log("STATUS:" + status);
+                            console.log(data);
+                        }
+                    );
+                }
+            }
+        }
+    );
+
+}
+
+
+/**
+ * Saves the breakpoints
+ */
+function debugSB() {
+    savedBP = JSON.parse(JSON.stringify(breakpoints));
+}
+
+/**
+ * Clears breakpoints
+ */
+function clearBP(tellDebugger) {
+    let keys = Object.keys(breakpoints);
+    for (let i = 0; i < keys.length; i++) {
+        let key = keys[i]
+        $("#bp-" + key).css("display", "");
+        // Tell the debugger to kill it
+    }
+    if (tellDebugger) {
+        var ajaxurl = "/Debugger/sendDebugMSG";
+        $.post(ajaxurl,
+            {
+                test: "hi",
+                userID: uIN,
+                tcNum: currTC,
+                message: "clearBreaks", 
+            },
+            function(data, status) {
+                console.log("STATUS:" + status);
+                console.log(data);
+            }
+        );
+    }
+    breakpoints = {};
+}
+
+/**
+ * Toggles the breakpoint on the fileline
+ */
+function toggleBP(fileLineIdx) {
+    let addBP = true;
+    if (!canSetBP) {
+        // Return if we are not permitted to set breakpoints
+        return;
+    }
+    if (fileLineIdx in breakpoints) {
+        let bpCondition = breakpoints[fileLineIdx];
+        if (bpCondition) {
+            // We are currently showing breakpoint, remove it
+            $("#bp-" + fileLineIdx).css("display", "");
+            addBP = false;
+        } else {
+            // We are not currently showing breakpoint, show it
+            $("#bp-" + fileLineIdx).css("display", "inline");
+        }
+        breakpoints[fileLineIdx] = !bpCondition 
+    } else {
+        breakpoints[fileLineIdx] = true;
+        // Display the breakpoint
+        $("#bp-" + fileLineIdx).css("display", "inline");
+    }
+    let bpCMD = "setBreak";
+    if (!addBP) {
+        bpCMD = "removeBreak";
+    }
+    // Tell debugger to add/clear breakpoint
+    var ajaxurl = "/Debugger/sendDebugMSG";
+    $.post(ajaxurl,
+        {
+            test: "hi",
+            fileText: textFromFileLoaded,
+            userID: uIN,
+            tcNum: currTC,
+            message: bpCMD, 
+            bpNum: fileLineIdx,
+        },
+        function(data, status) {
+            console.log("STATUS:" + status);
+            console.log(data);
+        }
+    );
+}
+
 // Attempts to enable file input - needs to not be running test cases and needs to not be running debugger
 function tryEnableFileInput() {
     if (!runningDebug && !runningTC) {
         document.getElementById("submissionFile").disabled = false;
     }
 }
+
+function editCustomTC(tcID) {
+    $("#autograder").css("display","none");
+    $("#edit-tc").css("display", "");
+    currCustomTC = tcID;
+    if (tcID in customTCInputs) {
+        // If we have a previous tc input, use it
+        document.querySelector("#edit-tc-textarea").value = customTCInputs[tcID];
+    }
+}
+
+/**
+ * Cancels the custom test case editor
+ */
+function cancelCustomTC() {
+    $("#autograder").css("display","");
+    $("#edit-tc").css("display", "none");
+}
+
+/**
+ * Saves the current custom test case and closes the test case editor
+ */
+function saveCustomTC() {
+
+    noDebug = false;
+    // console.log("Initial post complete");
+    let ajaxurl = "/Autograder/sendGradeRequest";
+    // console.log(numTC);
+
+    // let tcNumStr = (i + 1) + "";
+    // console.log("Executing post " + tcNumStr);
+    let tcInput = "";
+    customTCInputs[currCustomTC] = document.querySelector("#edit-tc-textarea").value;
+    if (currCustomTC in customTCInputs) {
+        tcInput = customTCInputs[currCustomTC];
+    }
+    $.post(ajaxurl,
+        {
+            test: "hi",
+            fileText: textFromFileLoaded,
+            userID: uIN,
+            tcNum: currCustomTC,
+            tcInput: tcInput,
+        },
+        function(data, status) {
+            console.log("STATUS:" + status);
+            console.log(data);
+            tcResults[currCustomTC - 1] = data;
+            let dataLines = tcResults[currCustomTC - 1].split("\n");
+            let flag = dataLines[dataLines.length - 1];
+            if (flag == "SUCCESS") {
+                tcStatuses[currCustomTC - 1] = "PASS";
+                $("#td-tc-pf-" + currCustomTC).css("color", "green");
+            } else {
+                tcStatuses[currCustomTC - 1] = "FAIL";
+                if (flag.indexOf("VIOLATION") != -1) {
+                    noDebug = true;
+                }
+                $("#td-tc-pf-" + currCustomTC).css("color", "red");
+
+            }
+            // Update test status
+            document.querySelector("#td-tc-pf-" + currCustomTC).innerHTML = "<b>" + tcStatuses[currCustomTC - 1]  + "</b>";
+            $("#autograder").css("display","");
+            $("#edit-tc").css("display", "none");
+            // Show the results of the test case
+        }
+    );
+
+}
+
+
 
 // #########################
 // Login / Logout Section
@@ -1099,7 +1409,10 @@ function enableVizButtons() {
     document.querySelector("#run-viz-back").disabled = false;
     document.querySelector("#run-viz-play").disabled = false;
     for (let i = 0; i < tcCount; i++) {
-        document.querySelector("#tcv" + (i + 1)).disabled = false;
+        let tcv = document.querySelector("#tcv" + (i + 1));
+        if (tcv != null) {
+            tcv.disabled = false;
+        }
     }
 }
 
@@ -1108,7 +1421,10 @@ function enableVizButtons() {
  */
 function enableTCVizButtons() {
     for (let i = 0; i < tcCount; i++) {
-        document.querySelector("#tcv" + (i + 1)).disabled = false;
+        let tcv = document.querySelector("#tcv" + (i + 1));
+        if (tcv != null) {
+            tcv.disabled = false;
+        }
     }
 }
 
@@ -1117,7 +1433,10 @@ function enableTCVizButtons() {
  */
 function disableTCVizButtons() {
     for (let i = 0; i < tcCount; i++) {
-        document.querySelector("#tcv" + (i + 1)).disabled = true;
+        let tcv = document.querySelector("#tcv" + (i + 1));
+        if (tcv != null) {
+            tcv.disabled = true;
+        }
     }
 }
 
@@ -1398,6 +1717,7 @@ function visualizePlay() {
         playIntervalID = setInterval(visualizePlayStep, Math.floor(1000 * 1/vizPlaySpeed));
     } else {
         console.log("Stopping visualizer");
+        clearInterval(playIntervalID);
         enableTCDebugButtons();
         enableTCVizButtons();
         document.querySelector("#run-viz-speed-chooser").disabled = false;
@@ -1409,7 +1729,7 @@ function visualizePlay() {
             document.querySelector("#run-viz-forward").disabled = false;
         }
         enableGeneralComponents();
-        clearInterval(playIntervalID);
+
         playIntervalID = undefined;
     }
     vizPlayMode = !vizPlayMode;

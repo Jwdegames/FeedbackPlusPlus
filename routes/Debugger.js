@@ -68,7 +68,7 @@ router.post('/debug', function(req, res)  {
     debugResDict[req.body.userID] = res;
     // for (let tcIndex = 1; tcIndex < maxTestCase + 1; tcIndex++) {
     try {
-        testCase = fs.readFileSync("test-case-"+tcIndex+".txt", 'utf8');
+         //testCase = fs.readFileSync("test-case-"+tcIndex+".txt", 'utf8');
         console.log(testCase);
     } catch (err) {
         console.log(err)
@@ -76,8 +76,8 @@ router.post('/debug', function(req, res)  {
     }
     //const pyProg = spawn('python', ['Grading/RPN_Calculator_Soln.py', testCase]);
     var testOut;
-    var testIn;
-    let pyProg = spawn('python', ['-m', 'pdb','tmp/test-submission-'+req.body.userID+'-debug.py', testCase, "debug"], {stdio: ["pipe", "pipe", "pipe"]});
+    var testIn = req.body.tcInput;
+    let pyProg = spawn('python', ['-m', 'pdb','tmp/test-submission-'+req.body.userID+'-debug.py', testIn, "debug"], {stdio: ["pipe", "pipe", "pipe"]});
     pyProgDict[req.body.userID] = pyProg;
     console.log("Spawned");
     try {
@@ -95,7 +95,7 @@ router.post('/debug', function(req, res)  {
         });
         pyProg.stderr.on('data', function(data) {
             dataStr = data.toString()
-            console.log(data);
+            // console.log(dataStr);
             let tempRes = debugResDict[req.body.userID];
             tempRes.write("OUTPUT:\n")
             tempRes.write(data);
@@ -120,20 +120,38 @@ router.post('/sendDebugMSG', function(req, res)  {
     }
     else {
         // Commands are necessary to prevent code injection
-        let commands = ["next", "step", "getLines", "printGlobals", "initLocals", "setLocals", "printLocals"]
+        let commands = ["next", "step", "getLines", "printGlobals", "initLocals", "setLocals", "printLocals", "setBreak", "removeBreak", "clearBreaks", "playUntilBreak", "play"];
         let commandMap = {
             next : "next\n",
             step : "step\n",
             getLines : "l .\n",
             printGlobals : "[\"|:>var:| {} |:>value:| {} |:>type:| {} |:<end:| \".format(i, globals()[i], type((globals()[i]))) for i in list(globals().keys())]\n",
             initLocals : "var1491625 = []\n",
-            setLocals : "for var182764 in dir(): var1491625.append(\"|:>var:| {} |:>value:| {} |:>type:| {} |:<end:|\".format(i, locals()[var182764], type(locals()[var182764])))\n",
-            printLocals : "p var1491625\n"
-        }
+            setLocals : "for var182764 in dir(): var1491625.append(\"|:>var:| {} |:>value:| {} |:>type:| {} |:<end:|\".format(var182764, locals()[var182764], type(locals()[var182764])))\n",
+            printLocals : "p var1491625\n",
+            setBreak: "b",
+            removeBreak: "cl",
+            clearBreaks: "cl\n",
+            playUntilBreak: "continue\n",
+            play: "c\n",
+        };
         if (commands.includes(req.body.message)) {
         // WE CAN DO ONE REQUEST AT A TIME bc res needs to be set.
             debugResDict[req.body.userID] = res;
-            currPyProg.stdin.write(commandMap[req.body.message]);
+            let cmd = commandMap[req.body.message];
+            // Modify command if need be
+            if (cmd == "b") {
+                console.log("Adding breakpoint at line: " + req.body.bpNum);
+                cmd += " " + req.body.bpNum + "\n";
+            } else if (cmd == "cl") {
+                console.log("Adding breakpoint at line: " + req.body.bpNum);
+                cmd += " " + "tmp/test-submission-"+req.body.userID+"-debug.py" + ":" + req.body.bpNum + "\n";
+            }
+            console.log("Writing command: " + cmd);
+            currPyProg.stdin.write(cmd);
+            if (cmd == "cl\n") {
+                currPyProg.stdin.write("yes\n");
+            }
         } else {
             console.log("Invalid command: " + req.body.message);
             res.send("ERROR: INVALID COMMAND");

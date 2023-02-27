@@ -60,6 +60,12 @@
                     <button id = "signup-section" type = "button" class = "btn btn-primary" onclick="signIn()">Sign In</button>
                     <button id = "logout-section" type = "button" class = "btn btn-primary" onclick="logout()" style="display:none">Logout</button>
                     <h1 style = "text-align:center;">Feedback++</h1>
+                    <div id = "edit-tc" class = "form-outline" style = "display:none">
+                        <textarea class="form-control" id="edit-tc-textarea" rows="4"></textarea>
+                        <label class="form-label" for="edit-tc-label">Edit Test Case</label>
+                        <button id = "save-custom-tc" type = "button" class = "btn btn-primary" onclick="saveCustomTC()">Save Test Case</button>
+                        <button id = "close-custom-tc" type = "button" class = "btn btn-primary" onclick="cancelCustomTC()">Cancel</button>
+                    </div>
                     <div id = "autograder" style="display: none">
                         <label class="form-label" for="customFile">Input Submission</label>
                         <input type="file" class="form-control" id="submissionFile" onchange="displayFileData(event)"/>
@@ -77,9 +83,14 @@
                                 
                                 <div id = "direct-message-table" style ="display:table-cell;">
                                     <div id = "debugger" style = "display:none">
-                                        <button id = "run-debug" type = "button" class = "btn btn-primary" onclick="debugReset()" style = "display:none">Reset Debugger</button>
+                                        <button id = "run-debug" type = "button" class = "btn btn-primary" onclick="debugReset()" style = "display:none">Reset</button>
                                         <button id = "run-debug-NS" type = "button" class = "btn btn-primary" onclick="debugNS()" style = "display:none">Next Step</button>
                                         <button id = "run-debug-NL" type = "button" class = "btn btn-primary" onclick="debugNL()" style = "display:none">Next Line</button>
+                                        <button id = "run-debug-PB" type = "button" class = "btn btn-primary" onclick="debugPB()" style = "display:none">Play</button>
+                                        <div id = "run-debug-BPL" style = "display: none">BPs:</div>
+                                        <button id = "run-debug-SB" type = "button" class = "btn btn-primary" onclick="debugSB()" style = "display:none">Save</button>
+                                        <button id = "run-debug-LB" type = "button" class = "btn btn-primary" onclick="debugLB()" style = "display:none">Load</button>
+                                        <button id = "run-debug-CB" type = "button" class = "btn btn-primary" onclick="clearBP(true)" style = "display:none">Clear</button>
                                         <div id ="debug-output"></div>
                                         <div id ="debug-table"></div>
                                     </div>
