@@ -17,7 +17,10 @@ def rpn_calculate(inputString):
             // item in the stack
     
     '''
-    return -1
+    while True:
+        a = -1
+        b = -10
+    return a
 
 # DO NOT MODIFY THE BELOW
 import sys

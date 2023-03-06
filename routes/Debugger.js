@@ -6,6 +6,8 @@ var maxTestCase = 5;
 var pyProg;
 var debugResDict = {};
 var pyProgDict = {}
+var pyProgInProcess = {};
+var maxRunTime = 2000;
 
 
 /**
@@ -23,6 +25,10 @@ var pyProgDict = {}
     if (fileTXT.match(/open *\(/)) {
         console.log("Open violation detected!");
         return "OPEN VIOLATION - No files may be opened!";
+    }
+    if (fileTXT.match(/= *open/)) {
+        console.log("Open violation detected!");
+        return "OPEN VIOLATION - Open may not be assigned to a variable!";
     }
     if (fileTXT.indexOf("__builtins__") != -1) {
         console.log("builtins violation detected!");
@@ -91,6 +97,7 @@ router.post('/debug', function(req, res)  {
             // tempRes.write("OUTPUT:\n")
             tempRes.write(data);
             tempRes.end('\nDEBUG');
+            pyProgInProcess[req.body.userID] = false;
             
         });
         pyProg.stderr.on('data', function(data) {
@@ -100,6 +107,7 @@ router.post('/debug', function(req, res)  {
             tempRes.write("OUTPUT:\n")
             tempRes.write(data);
             tempRes.end('\nFAILED TO EXECUTE');
+            pyProgInProcess[req.body.userID] = false;
             // res.send("FAILED:" + dataStr);
             // res.end('end');
         });
@@ -148,7 +156,15 @@ router.post('/sendDebugMSG', function(req, res)  {
                 cmd += " " + "tmp/test-submission-"+req.body.userID+"-debug.py" + ":" + req.body.bpNum + "\n";
             }
             console.log("Writing command: " + cmd);
+                // Stop execution if max time reached and we are still executing;
+            setTimeout(() => {
+                if (pyProgInProcess[req.body.userID]) {
+                    currPyProg.kill();
+                    res.send("ERROR: INFINITE LOOP");
+                }
+            }, maxRunTime);
             currPyProg.stdin.write(cmd);
+            pyProgInProcess[req.body.userID] = true;
             if (cmd == "cl\n") {
                 currPyProg.stdin.write("yes\n");
             }

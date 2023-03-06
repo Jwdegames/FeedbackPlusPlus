@@ -179,7 +179,7 @@ function generateVCMDs(tcInput, fileToRun) {
                     vCMDList.push("STACK_HIGHLIGHT_ERROR_1::CALC");
                     vDescriptorList.push("ERROR: The calculator can only operate on valid base 10 numbers! " + tcItem + " is not a valid base 10 number!");
                     vCMDList.push("RESULT_ERROR");
-                    vDescriptorList.push("ERROR: The calculator can only operate on valid base 10 numbers!"  + tcItem + " is not a valid base 10 number!");
+                    vDescriptorList.push("ERROR: The calculator can only operate on valid base 10 numbers! "  + tcItem + " is not a valid base 10 number!");
                     vCMDList.push("ENDGROUP");
                     vDescriptorList.push("");
                     failed = true;

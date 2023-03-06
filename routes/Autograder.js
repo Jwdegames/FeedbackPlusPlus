@@ -3,10 +3,13 @@ const {NodeVM} = require("vm2");
 // express.use(json);
 const router = express.Router();
 const fs = require('fs')
-var maxTC = 8;
+var maxTC = 9;
 var maxNormalTC = 5;
 var maxRandomTC = 2;
-var maxCustomTC = 1;
+var maxCustomTC = 2;
+var maxRunTime = 2000;
+var pyProgDict = {}
+var pyProgSolnDict = {}
 
 router.post('/getNumTestCases', function(req, res) {
     let tcArray = [maxTC, maxNormalTC, maxRandomTC, maxCustomTC];
@@ -29,6 +32,10 @@ function checkImports(fileTXT, allowedImports) {
     if (fileTXT.match(/open *\(/)) {
         console.log("Open violation detected!");
         return "OPEN VIOLATION - No files may be opened!";
+    }
+    if (fileTXT.match(/= *open/)) {
+        console.log("Open violation detected!");
+        return "OPEN VIOLATION - Open may not be assigned to a variable!";
     }
     if (fileTXT.indexOf("__builtins__") != -1) {
         console.log("builtins violation detected!");
@@ -391,6 +398,9 @@ function continueGrading(req, res, tcIndex, tcInput, tcOutput) {
             res.write("ERROR:" + err);
         }
     });
+    pyProg.stderr.on('data', function(data) {
+        userOut += data;
+    });
     pyProg.on('close', function(code) {
         // Strip the extra character which comes from user output
 
@@ -399,7 +409,7 @@ function continueGrading(req, res, tcIndex, tcInput, tcOutput) {
         res.write(tcInput);
         res.write("\nEXPECTED:\n")
         res.write(tcOutput);
-        res.write("\n\nOUTPUT:\n")
+        res.write("\nOUTPUT:\n")
         res.write(userOut);
         if (userOut === tcOutput) {
             res.end('\nSUCCESS');
@@ -410,29 +420,12 @@ function continueGrading(req, res, tcIndex, tcInput, tcOutput) {
         }
         // console.log("Test case " + tcIndex + " graded!");
     });
-    pyProg.stderr.on('data', function(data) {
-        // console.log("Error on out:" + );
-        /*if (data == null) {
-            console.log("NULL DATA");
-            data = "NULL";
-        }
-        else {
-            dataStr = data.toString();
-        }
-        
 
-        res.write("INPUT:\n")
-        res.write(tcInput);
-        res.write("\nEXPECTED:\n")
-        res.write(tcOutput);
-        res.write("\n\nOUTPUT:\n")
-        res.write(data);
-        res.end('\nFAILED TO EXECUTE');
-        pyProg.kill();*/
-        userOut += data;
-        // res.send("FAILED:" + dataStr);
-        // res.end('end');
-    });
+    // Stop execution if max time reached
+    setTimeout(() => {
+        userOut += "\nTIMEOUT ERROR";
+        pyProg.kill();
+    }, maxRunTime);
 }
 
 router.post('/sendGradeRequest', function(req, res)  {
@@ -492,6 +485,8 @@ router.post('/sendGradeRequest', function(req, res)  {
     }
     // console.log("Generated test case " + tcIndex + ":" + testCase);
     const pyProgSoln = spawn('python', ['Grading/RPN_Calculator_soln.py', testCase]);
+    pyProgSolnDict[req.body.userID] = pyProgSoln;
+
     pyProgSoln.stdout.on('data', function(data) {
         testOut += data;
     });
@@ -502,6 +497,13 @@ router.post('/sendGradeRequest', function(req, res)  {
         console.log("Program ended with code " + code);
         continueGrading(req, res, tcIndex, testCase, testOut + testError);
     });
+
+    // Stop execution if max time reached
+    setTimeout(() => {
+        testError += "\nTIMEOUT ERROR";
+        pyProgSoln.kill();
+    }, maxRunTime);
+
     // for (let tcIndex = 1; tcIndex < maxTC + 1; tcIndex++) {
 
     //const pyProg = spawn('python', ['Grading/RPN_Calculator_Soln.py', testCase]);

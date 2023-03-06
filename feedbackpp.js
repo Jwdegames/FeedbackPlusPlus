@@ -55,6 +55,7 @@ function disableGeneralComponents() {
     document.querySelector("#logout-section").disabled = true;
     document.querySelector("#toggle-dv").disabled = true;
     document.querySelector("#submissionFile").disabled = true;
+    document.querySelector("#file-upload-button").disabled = true;
 }
 
 /**
@@ -66,6 +67,7 @@ function enableGeneralComponents() {
     document.querySelector("#logout-section").disabled = false;
     document.querySelector("#toggle-dv").disabled = false;
     document.querySelector("#submissionFile").disabled = false;
+    document.querySelector("#file-upload-button").disabled = false;
 }
 
 function runTestCase(index) {
@@ -495,12 +497,12 @@ function debugP() {
 function findLNFromData(data) {
     let lNum = 0;
     let lines = data.split("\n");
-    console.log(lines);
+    // console.log(lines);
     for (let i = 0; i < lines.length; i++) {
         let cLine = lines[i];
         let cLineTrim = cLine.trim();
         cLineParts = cLineTrim.slice(cLineTrim.indexOf(" ")).trim();
-        console.log(cLineParts);
+        // console.log(cLineParts);
         if (cLineParts.length >= 2 && cLineParts.indexOf("->\t") != -1) {
             lNum = cLineTrim.slice(0, cLineTrim.indexOf(" "));
             break;
@@ -703,7 +705,7 @@ function getVarsJsonOld(data) {
                                 },
                                 function(data, status) {
                                     console.log("STATUS GET LOCAL VARS:" + status);
-                                    console.log("Local data: " + data);
+                                    // console.log("Local data: " + data);
                                     // Get the variable info
                                     localJVD = getVarsJson(data, 1);
                                     prevData.push(localJVD);
@@ -935,6 +937,7 @@ function displayFileData(event) {
         var fileReader = new FileReader();
         fileName = fileToLoad.name;
         fileReader.onload = function(fileLoadedEvent){
+            console.log("New file loaded");
             textFromFileLoaded = fileLoadedEvent.target.result;
             breakpoints = {};
             // console.log(textFromFileLoaded);
@@ -970,6 +973,8 @@ function displayFileData(event) {
 
         fileReader.readAsText(fileToLoad, "UTF-8");
     }
+    // Reset the file loader
+    document.getElementById("submissionFile").value = "";
 
 }
 
@@ -2130,6 +2135,8 @@ let s = p => {
   
   var p5Obj = new p5(s); // invoke p5.js
 
+
+
 /**
  * STARTUP
  * 
@@ -2144,6 +2151,10 @@ let s = p => {
  * Run functions on load
  */
 window.onload = function(e) {
+
+    // Attach upload functionality to button
+
+
     let user = localStorage.getItem("userName");
     let pin = localStorage.getItem("uIN");
     if (user != null && pin != null) {
@@ -2155,3 +2166,4 @@ window.onload = function(e) {
         console.log("Loaded credentials from local storage");
     }
 }
+
