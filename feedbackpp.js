@@ -22,6 +22,7 @@ var runningDebug = false;
 var runningTC = false;
 var runningViz = false;
 var showingDebugger = false;
+var enabledDebugger = false;
 var showingVisualizer = false;
 var vizPlayMode = false;
 var vizPlaySpeed = 1;
@@ -170,19 +171,6 @@ function checkCompletion() {
         $("#toggle-dv").css("display", "");
         document.querySelector("#toggle-dv").innerHTML = "Switch to Visualizer";
         hasInitViz = false;
-        let ajaxurl = "/Database/updateTestResults";
-        $.post(ajaxurl,
-            {
-                test: "hi",
-                fileCode: textFromFileLoaded,
-                userID: uIN,
-                username: userName,
-                testCasesPassed: tcPassed,
-            },
-            function(data, status) {
-                console.log("STATUS:" + status);
-                console.log(data);
-            });
     }
 
 }
@@ -216,6 +204,7 @@ function runTestCases(numTC) {
                 test: "hi",
                 fileText: textFromFileLoaded,
                 userID: uIN,
+                userName: userName,
                 tcNum: tcNumStr,
                 tcInput: tcInput,
             },
@@ -241,6 +230,7 @@ function runTestCases(numTC) {
 }
 
 function disableDebugButtons() {
+    enabledDebugger = false;
     document.querySelector("#run-debug").disabled = true;
     document.querySelector("#run-debug-NL").disabled = true;
     document.querySelector("#run-debug-NS").disabled = true;
@@ -281,6 +271,7 @@ function hideDebugButtons() {
 }
 
 function enableDebugButtons() {
+    enabledDebugger = true;
     document.querySelector("#run-debug").disabled = false;
     document.querySelector("#run-debug-NL").disabled = false;
     document.querySelector("#run-debug-NS").disabled = false;
@@ -821,6 +812,8 @@ function processDebugInfo(data, tcNumStr) {
     showDebugButtons();
     if (ended) {
         disableDebugButtons();
+        // But enable the reset button
+        document.querySelector("#run-debug").disabled = false;
     } else {
         // Enable the debugger
         if (!showingDebugger) {
@@ -1071,7 +1064,7 @@ function clearBP(tellDebugger) {
  */
 function toggleBP(fileLineIdx) {
     let addBP = true;
-    if (!canSetBP) {
+    if (!canSetBP || !enabledDebugger) {
         // Return if we are not permitted to set breakpoints
         return;
     }
@@ -2153,7 +2146,7 @@ let s = p => {
 window.onload = function(e) {
 
     // Attach upload functionality to button
-
+    
 
     let user = localStorage.getItem("userName");
     let pin = localStorage.getItem("uIN");

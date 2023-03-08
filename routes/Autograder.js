@@ -1,5 +1,6 @@
 const express = require('express');
 const {NodeVM} = require("vm2");
+const { updateTestResults } = require('./Database');
 // express.use(json);
 const router = express.Router();
 const fs = require('fs')
@@ -411,13 +412,23 @@ function continueGrading(req, res, tcIndex, tcInput, tcOutput) {
         res.write(tcOutput);
         res.write("\nOUTPUT:\n")
         res.write(userOut);
+        reqSend = {}
+        reqSend.body = {};
+        reqSend.body.userID = req.body.userID;
+        reqSend.body.username = req.body.userName;
+        reqSend.body.fileCode = req.body.fileTXT;
+        reqSend.body.tcNum = tcIndex - 1;
         if (userOut === tcOutput) {
+            reqSend.body.passed = true;
             res.end('\nSUCCESS');
+
         } else {
             // console.log("TC " + tcIndex + " User output: " + Array.from(userOut));
             // console.log("TC " + tcIndex + " output: " + Array.from(tcOutput));
+            reqSend.body.passed = false;
             res.end('\nFAIL');
         }
+        updateTestResults(reqSend);
         // console.log("Test case " + tcIndex + " graded!");
     });
 

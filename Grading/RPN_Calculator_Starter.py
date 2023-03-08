@@ -17,7 +17,7 @@ def rpn_calculate(inputString):
             // item in the stack
     
     '''
-    return -1
+    return "The answer is -1"
 
 # DO NOT MODIFY THE BELOW
 import sys

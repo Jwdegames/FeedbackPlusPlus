@@ -1,15 +1,21 @@
 const mongoose = require("mongoose");
 
 const TestsResultsTemplate = new mongoose.Schema({
-    // username field (unique)
+    // username field (non-unique)
     username: {
       type: String,
       required: [true, "Please provide a username!"],
-      unique: [true, "Username is taken!"],
+      unique: false,
+    },
+    // id of assignment (non-unique)
+    assignment_id: {
+      type: String,
+      required: [true, "Please provide an assignment id!"],
+      unique: false
     },
     // Number of test cases passed field (non-unique)
     testCasesPassed: {
-      type: Number,
+      type: [Boolean],
       required: [true, "Please write number of test cases passed!"],
       unique: false,
     },

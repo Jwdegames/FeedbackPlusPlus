@@ -19,7 +19,7 @@ def rpn_calculate(inputString):
     '''
     while True:
         a = -1
-        b = -10
+        b = -1
     return a
 
 # DO NOT MODIFY THE BELOW

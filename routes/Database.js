@@ -67,7 +67,8 @@ router.post("/register", function(req, res) {
         });
         const newTestResults = new TestsResultsTemplate({
             username: req.body.username,
-            testCasesPassed: 0,
+            assignment_id: "0",
+            testCasesPassed: [false, false, false, false, false, false, false, false, false],
             fileCode: "<blank>",
         });
         newTestResults.save().then((result) => {
@@ -155,6 +156,43 @@ router.post("/login", function(req, res) {
 });
 
 
+updateTestResults = function(req) {
+    try {
+        var query = {'username': req.body.username, 'assignment_id' : 0};
+        if (req.body != null) {
+            if (req.body.fileCode == "") {
+                // Prevent blank string from being used
+                req.body.fileCode = "<blank>";
+            }
+        } else {
+            return "No Res Body!";
+        }
+        let tcString = "testCasesPassed." + req.body.tcNum;
+        let updateQuery = {};
+        updateQuery["$set"] = {};
+        updateQuery["$set"][tcString] = req.body.passed;
+        updateQuery["$set"]["fileCode"] = req.body.fileCode;
+        console.log(updateQuery);
+        TestResults.findOneAndUpdate(query, 
+            updateQuery, 
+            {upsert: true}, 
+            function(err, doc) {
+            if (err) {
+                console.log("Failed to update test results");
+                console.log(err);
+                return "Database Test Result Update Fail: " + String(err);
+            }
+            console.log("Updated test results");
+            return "Updated test results";
+        });
+    } catch (e) {
+        console.log("update test results failed");
+        console.log(e);
+        return "Update test results failed: " + String(e);
+    }
+}
+
+/*
 router.post("/updateTestResults", function(req, res) {
     try {
         var query = {'username': req.body.username};
@@ -183,4 +221,5 @@ router.post("/updateTestResults", function(req, res) {
         res.end("\n");
     }
 });
-module.exports = router;
+*/
+module.exports = {router: router, updateTestResults: updateTestResults};

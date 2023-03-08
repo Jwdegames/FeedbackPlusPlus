@@ -68,8 +68,8 @@
                     </div>
                     <div id = "autograder" style="display: none">
                         <id class="form-label" for="customFile">Input Submission:</label>
-                        <button class="btn btn-primary" id = "file-upload-button">
-                            <i class="fa fa-image"></i>Upload file<input type="file" class="" id="submissionFile" style = "opacity: 0" oninput="displayFileData(event)"/>
+                        <button class="btn btn-primary" id = "file-upload-button" onclick = "document.getElementById('submissionFile').click();">
+                            <i class="fa fa-image"></i>Upload file<input type="file" class="" id="submissionFile" style = "display: none" oninput="displayFileData(event)"/>
                         </button>
                         <div style ="width: 75%; display:table;">
                             <div style ="display: table-row;">

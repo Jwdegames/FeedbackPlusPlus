@@ -45,7 +45,7 @@ const Debugger = require("./routes/Debugger.js");
 app.use("/Debugger", Debugger);
 
 const Database = require("./routes/Database.js");
-app.use("/Database", Database);
+app.use("/Database", Database.router);
 
 const Visualizer = require("./routes/Visualizer.js");
 app.use("/Visualizer", Visualizer);
