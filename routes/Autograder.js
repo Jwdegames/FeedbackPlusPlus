@@ -495,7 +495,7 @@ router.post('/sendGradeRequest', function(req, res)  {
         }
     }
     // console.log("Generated test case " + tcIndex + ":" + testCase);
-    const pyProgSoln = spawn('python', ['Grading/RPN_Calculator_soln.py', testCase]);
+    const pyProgSoln = spawn('python', ['Grading/RPN_Calculator_Soln.py', testCase]);
     pyProgSolnDict[req.body.userID] = pyProgSoln;
 
     pyProgSoln.stdout.on('data', function(data) {
