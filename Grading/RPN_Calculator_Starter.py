@@ -31,8 +31,6 @@ if len(sys.argv) < 2:
         result = rpn_calculate(usrStr.strip())
         print(result)
         usrStr = input("Please enter requested calculation: ")
-
-    print("farvel!")
 else:
     usrStr = sys.argv[1]
     if usrStr == "":

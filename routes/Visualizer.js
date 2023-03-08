@@ -79,20 +79,20 @@ function generateVCMDs(tcInput, fileToRun) {
                 vCMDList.push("STACK_PUSH::RPN::" + tcItem);
                 vDescriptorList.push("The calculator pushes the operator " + tcItem + " onto the stack");
 
-                let num1 = rpn_stack.pop()
                 let num2 = rpn_stack.pop()
+                let num1 = rpn_stack.pop()
                 vCMDList.push("STACK_NEXT_RPOP::RPN");
                 vDescriptorList.push("The calculator pops " + tcItem + " from the stack.");
                 vCMDList.push("UPDATE_VAR::op::" + tcItem);
                 vDescriptorList.push("The calculator updates the operator variable to " + tcItem);
                 vCMDList.push("STACK_NEXT_RPOP::RPN");
-                vDescriptorList.push("The calculator pops from the stack the number " + num1);
-                vCMDList.push("UPDATE_VAR::num1::" + num1);
-                vDescriptorList.push("The calculator updates the num1 variable to " + num1);
-                vCMDList.push("STACK_NEXT_RPOP::RPN");
                 vDescriptorList.push("The calculator pops from the stack the number " + num2);
                 vCMDList.push("UPDATE_VAR::num2::" + num2);
                 vDescriptorList.push("The calculator updates the num2 variable to " + num2);
+                vCMDList.push("STACK_NEXT_RPOP::RPN");
+                vDescriptorList.push("The calculator pops from the stack the number " + num1);
+                vCMDList.push("UPDATE_VAR::num1::" + num1);
+                vDescriptorList.push("The calculator updates the num1 variable to " + num1);
 
                 // Store the values!
                 // Insert commands here

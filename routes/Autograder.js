@@ -208,8 +208,8 @@ function generateRandomTC(tcIndex) {
                         if (!includeError && j < numCount - 2) {
                             includeError = Math.random() > (1 - j/numCount);
                             if (includeError) {
-                                tcInput += "0 ";
                                 tcInput += Math.floor(Math.random() * 2001 - 1000) + " ";
+                                tcInput += "0 ";
                                 tcInput += "/ ";
                                 numOps++;
                                 j++;
@@ -233,7 +233,7 @@ function generateRandomTC(tcIndex) {
 
                     // Add error if not done so
                     if (!includeError) {
-                        tcTemp = "0 " + tcTemp + "/ ";
+                        tcTemp = tcTemp + "0 / ";
                     }
 
                     tcInput += tcTemp;
@@ -252,8 +252,8 @@ function generateRandomTC(tcIndex) {
                         if (!includeError && j < numCount - 2) {
                             includeError = Math.random() > (1 - j/numCount);
                             if (includeError) {
-                                tcInput += (Math.random() > 0.5 ? 1 : -1) * Math.floor(Math.random() * 901 + 100) + " ";
                                 tcInput += "0 ";
+                                tcInput += (Math.random() > 0.5 ? 1 : -1) * Math.floor(Math.random() * 901 + 100) + " ";
                                 tcInput += "^ ";
                                 numOps++;
                                 j++;
@@ -277,7 +277,7 @@ function generateRandomTC(tcIndex) {
 
                     // Add error if not done so
                     if (!includeError) {
-                        tcTemp = -1 * Math.floor(Math.random() * 901 + 100) + " 0 ^ " + tcTemp;
+                        tcTemp = "0 " + (-1 * Math.floor(Math.random() * 901 + 100)) + " ^ " + tcTemp;
                     }
 
                     tcInput += tcTemp;
@@ -341,8 +341,8 @@ function generateRandomTC(tcIndex) {
                         if (!includeError && j < numCount - 2) {
                             includeError = Math.random() > (1 - j/numCount);
                             if (includeError) {
-                                tcInput += "0 ";
                                 tcInput += Math.floor(Math.random() * 2001 - 1000) + " ";
+                                tcInput += "0 ";
                                 tcInput += "% ";
                                 numOps++;
                                 j++;
@@ -366,7 +366,7 @@ function generateRandomTC(tcIndex) {
 
                     // Add error if not done so
                     if (!includeError) {
-                        tcTemp = "0 " + tcTemp + "% ";
+                        tcTemp = tcTemp + "0 % ";
                     }
 
                     tcInput += tcTemp;

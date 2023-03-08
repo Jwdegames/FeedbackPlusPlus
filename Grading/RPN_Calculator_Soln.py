@@ -12,8 +12,8 @@ def rpn_calculate(inputString):
                 # Return an error message if the above condition is not true
                 return "Calculation failed. Not enough numbers in stack when operation requested."
             # Pop two numbers from the stack
-            num1 = rpn_stack.pop()
             num2 = rpn_stack.pop()
+            num1 = rpn_stack.pop()
             # Perform the operation on the two numbers
             # Return an error message if invalid operation (ex: divide by 0) occurs
             if item == "+":
@@ -67,8 +67,6 @@ if len(sys.argv) < 2:
         result = rpn_calculate(usrStr.strip())
         print(result)
         usrStr = input("Please enter requested calculation: ")
-
-    print("farvel!")
 else:
     usrStr = sys.argv[1]
     if usrStr == "":
