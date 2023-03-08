@@ -446,8 +446,15 @@ function debugPB() {
         function(data, status) {
             console.log("STATUS:" + status);
             console.log(data);
-            dataArray = [data];
-            debugGLN(dataArray, tcNumStr);
+            if (data.indexOf("ERROR: INFINITE LOOP") != -1) {
+                console.log("Infinite loop error");
+                enableGeneralComponents();
+                enableTCVizButtons();
+                document.querySelector("#run-debug").disabled = false;
+            } else {
+                dataArray = [data];
+                debugGLN(dataArray, tcNumStr);
+            }
         }
     );
 }

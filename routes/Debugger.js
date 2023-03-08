@@ -48,7 +48,7 @@ router.post('/debug', function(req, res)  {
     }
     console.log("Debug requested");
     // Close the current process:
-    if (req.body.userID in pyProgDict) {
+    if (req.body.userID in pyProgDict && pyProgDict[req.body.userID] != null) {
         console.log("Killing old debug process");
         pyProgDict[req.body.userID].kill();
     }
@@ -175,14 +175,20 @@ router.post('/sendDebugMSG', function(req, res)  {
                 }
                 console.log("Writing command: " + cmd);
                     // Stop execution if max time reached and we are still executing;
-                let timeout = setTimeout(() => {
-                    if (pyProgInProcess[req.body.userID]) {
-                        console.log("Error: Terminating due too long run time");
-                        currPyProg.kill();
-                        res.send("ERROR: INFINITE LOOP");
-                    }
-                }, maxRunTime);
-                pyProgTimeout[req.body.userID] = timeout;
+                if (cmd == "continue\n") {
+                    let timeout = setTimeout(() => {
+                        if (pyProgInProcess[req.body.userID]) {
+                            console.log("Error: Terminating due too long run time");
+                            if (currPyProg != null) {
+                                currPyProg.kill();
+                            }
+                            pyProgDict[req.body.userID] = undefined;
+                            currPyProg = undefined;
+                            res.send("ERROR: INFINITE LOOP");
+                        }
+                    }, maxRunTime);
+                    pyProgTimeout[req.body.userID] = timeout;
+                }
                 currPyProg.stdin.write(cmd);
                 pyProgInProcess[req.body.userID] = true;
                 if (cmd == "cl\n") {
