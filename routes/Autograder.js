@@ -416,7 +416,7 @@ function continueGrading(req, res, tcIndex, tcInput, tcOutput) {
         reqSend.body = {};
         reqSend.body.userID = req.body.userID;
         reqSend.body.username = req.body.userName;
-        reqSend.body.fileCode = req.body.fileTXT;
+        reqSend.body.fileCode = req.body.fileText;
         reqSend.body.tcNum = tcIndex - 1;
         if (userOut === tcOutput) {
             reqSend.body.passed = true;
